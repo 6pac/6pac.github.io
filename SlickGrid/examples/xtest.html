@@ -1,0 +1,188 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>SlickGrid example: Grouping</title>
+  <link rel="stylesheet" href="../slick.grid.css" type="text/css"/>
+  <link rel="stylesheet" href="../controls/slick.pager.css" type="text/css"/>
+  <link rel="stylesheet" href="../css/smoothness/jquery-ui-1.11.3.custom.css" type="text/css"/>
+  <link rel="stylesheet" href="examples.css" type="text/css"/>
+  <link rel="stylesheet" href="../controls/slick.columnpicker.css" type="text/css"/>
+  <style>
+    .cell-effort-driven {
+      text-align: center;
+    }
+
+    .slick-group-title[level='0'] {
+      font-weight: bold;
+    }
+
+    .slick-group-title[level='1'] {
+      text-decoration: underline;
+    }
+
+    .slick-group-title[level='2'] {
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+<div style="position:relative">
+  <div style="width:600px;">
+    <div class="grid-header" style="width:100%">
+      <label>SlickGrid</label>
+    </div>
+    <div id="myGrid" style="width:100%;height:500px;"></div>
+  </div>
+ </div>
+
+
+<script src="../lib/firebugx.js"></script>
+
+<script src="../lib/jquery-1.11.2.min.js"></script>
+<script src="../lib/jquery-ui-1.11.3.min.js"></script>
+<script src="../lib/jquery.event.drag-2.2.js"></script>
+
+<script src="../slick.core.js"></script>
+<script src="../slick.formatters.js"></script>
+<script src="../slick.editors.js"></script>
+<script src="../plugins/slick.cellrangedecorator.js"></script>
+<script src="../plugins/slick.cellrangeselector.js"></script>
+<script src="../plugins/slick.cellselectionmodel.js"></script>
+<script src="../slick.grid.js"></script>
+<script src="../slick.groupitemmetadataprovider.js"></script>
+<script src="../slick.dataview.js"></script>
+<script src="../controls/slick.pager.js"></script>
+<script src="../controls/slick.columnpicker.js"></script>
+
+<script>
+var ReportData = {
+	"cols":{
+		"date":"Date",
+		"status":"Status",
+		"dataField":"Data field"
+	},
+	"data":[
+		{"id":0,"date":"First","status":"Accepted","dataField":"1000"},
+		{"id":1,"date":"Second","status":"Accepted","dataField":"2000"},
+		{"id":2,"date":"Third","status":"Accepted","dataField":"3000"},
+		{"id":3,"date":"Fourth","status":"Accepted","dataField":"4000"},
+		{"id":4,"date":"Fifth","status":"Accepted","dataField":"5000"},
+		{"id":5,"date":"Sixth","status":"Canceled","dataField":"6000"},
+		{"id":6,"date":"Seventh","status":"Canceled","dataField":"7000"},
+		{"id":7,"date":"Eight","status":"Canceled","dataField":"8000"},
+		{"id":8,"date":"Ninth","status":"Canceled","dataField":"9000"},
+		{"id":9,"date":"Tenth","status":"Rejected","dataField":"1000"},
+		{"id":10,"date":"Eleventh","status":"Rejected","dataField":"2000"},
+		{"id":11,"date":"Twelfth","status":"Rejected","dataField":"3000"}
+	]
+};
+
+var options = {
+  enableCellNavigation: true,
+  editable: true,
+  autoHeight:true,
+  forceFitColumns: true,
+};
+
+function groupBy() {
+	dataView.setGrouping([{
+		getter: "status",
+		aggregators: [
+			new Slick.Data.Aggregators.Sum("dataField"),
+		],
+		collapsed: true,
+		aggregateCollapsed: true,
+		lazyTotalsCalculation: true
+	},{
+		getter: "date",
+		aggregators: [
+			new Slick.Data.Aggregators.Sum("dataField"),
+		],
+		collapsed:true,
+		aggregateCollapsed: true,
+		lazyTotalsCalculation: true
+	},]);
+}
+
+
+
+function sumTotalsFormatter (totals, columnDef) {
+	var rowData = '';
+
+	// Get sum
+	var val = totals.sum && totals.sum[columnDef.field];
+	if (val != null) {
+		rowData += "<b>" + (Math.round(parseFloat(val) * 100 ) / 100) + "</b>";
+	}
+
+	return rowData;
+}
+
+
+function makeGridColumns(data){
+	var that = this;
+	var columns = [];
+	var id = 0;
+
+	// Parse given result for SlickGrid
+	jQuery.each(data, function(label, name) {
+		var item = {
+			id: 		id++,
+			field: 		label,
+			name: 		name,
+			focusable: 	false,
+			groupTotalsFormatter: sumTotalsFormatter,
+		}
+
+		columns.push(item);
+	});
+
+	return columns;
+}
+
+
+$(function () {
+
+  var groupItemMetadataProvider = new Slick.Data.GroupItemMetadataProvider();
+
+  dataView = new Slick.Data.DataView({
+    groupItemMetadataProvider: groupItemMetadataProvider,
+    inlineFilters: true
+  });
+
+  //
+  var columns = makeGridColumns(ReportData.cols);
+
+  grid = new Slick.Grid("#myGrid", dataView, columns, options);
+
+  // register the group item metadata provider to add expand/collapse group handlers
+  grid.registerPlugin(groupItemMetadataProvider);
+
+
+  // wire up model events to drive the grid
+  dataView.onRowCountChanged.subscribe(function (e, args) {
+    grid.updateRowCount();
+    grid.render();
+  });
+
+  dataView.onRowsChanged.subscribe(function (e, args) {
+    grid.invalidateRows(args.rows);
+    grid.render();
+  });
+
+
+
+  // initialize the model after all the events have been hooked up
+  dataView.beginUpdate();
+
+  dataView.setItems(ReportData.data);
+    
+  groupBy();
+    
+  dataView.endUpdate();
+
+});
+</script>
+</body>
+</html>
