@@ -960,6 +960,60 @@
      * @method syncGridSelection
      */
     function syncGridSelection(grid, preserveHidden, preserveHiddenOnSelectionChange) {
+      var dv = this;
+      var inHandler;
+      var selectedRowIds = dv.mapRowsToIds(grid.getSelectedRows());
+      var onSelectedRowIdsChanged = new Slick.Event();
+
+      function setSelectedRowIds(rowIds) {
+        if (selectedRowIds.join(",") == rowIds.join(",")) {
+          return;
+        }
+
+        selectedRowIds = rowIds;
+
+        onSelectedRowIdsChanged.notify({
+          "grid": grid,
+          "ids": selectedRowIds,
+          "dataView": dv
+        }, new Slick.EventData(), dv);
+      }
+
+      function update() {
+        if (selectedRowIds.length > 0) {
+          inHandler = true;
+          var selectedRows = dv.mapIdsToRows(selectedRowIds);
+          if (!preserveHidden) {
+            setSelectedRowIds(dv.mapRowsToIds(selectedRows));       
+          }
+          grid.setSelectedRows(selectedRows);
+          inHandler = false;
+        }
+      }
+
+      grid.onSelectedRowsChanged.subscribe(function(e, args) {
+        if (inHandler) { return; }
+        var newSelectedRowIds = dv.mapRowsToIds(grid.getSelectedRows());
+        if (!preserveHiddenOnSelectionChange || !grid.getOptions().multiSelect) {
+          setSelectedRowIds(newSelectedRowIds);
+        } else {
+          // keep the ones that are hidden
+          var existing = $.grep(selectedRowIds, function(id) { return dv.getRowById(id) === undefined; });
+          // add the newly selected ones
+          setSelectedRowIds(existing.concat(newSelectedRowIds));
+        }
+      });
+
+      dv.onRowsChanged.subscribe(update);
+
+      dv.onRowCountChanged.subscribe(update);
+
+      return onSelectedRowIdsChanged;
+    }
+
+    // extend the functionality of syncGridSelection. This is an object that should be newed into existence.
+    
+    function gridSelectionExtender(grid, preserveHidden, preserveHiddenOnSelectionChange) {
       var self = this;
       var inHandler;
       var selectedRowIds = self.mapRowsToIds(grid.getSelectedRows());
