@@ -470,6 +470,10 @@
       return null;
     }
 
+
+
+
+
     function expandCollapseAllGroups(level, collapse) {
       if (level == null) {
         for (var i = 0; i < groupingInfos.length; i++) {
@@ -581,7 +585,7 @@
           group = groups[i];
           group.groups = extractGroups(group.rows, group);
         }
-      }      
+      }
 
       groups.sort(groupingInfos[level].comparer);
 
