@@ -99,7 +99,8 @@ if (typeof Slick === "undefined") {
       addNewRowCssClass: "new-row",
       preserveCopiedSelectionOnPaste: false,
       showCellSelection: true,
-      viewportClass: null
+      viewportClass: null,
+	  minRowBuffer: 3
     };
 
     var columnDefaults = {
@@ -1600,7 +1601,7 @@ if (typeof Slick === "undefined") {
       }
     }
 
-    function defaultFormatter(row, cell, value, columnDef, dataContext) {
+    function defaultFormatter(row, cell, value, columnDef, dataContext, grid) {
       if (value == null) {
         return "";
       } else {
@@ -1718,7 +1719,7 @@ if (typeof Slick === "undefined") {
       var value = null, formatterResult = '';
       if (item) { 
         value = getDataItemValueForColumn(item, m);
-        formatterResult =  getFormatter(row, m)(row, cell, value, m, item);
+        formatterResult =  getFormatter(row, m)(row, cell, value, m, item, self);
         if (formatterResult === null || formatterResult === undefined) { formatterResult = ''; }
       }
       
@@ -1872,7 +1873,7 @@ if (typeof Slick === "undefined") {
       if (currentEditor && activeRow === row && activeCell === cell) {
         currentEditor.loadValue(d);
       } else {
-        var formatterResult =  d ? getFormatter(row, m)(row, cell, getDataItemValueForColumn(d, m), m, d) : "";
+        var formatterResult =  d ? getFormatter(row, m)(row, cell, getDataItemValueForColumn(d, m), m, d, self) : "";
         applyFormatResultToCellNode(formatterResult, cellNode);
         invalidatePostProcessingResults(row);
       }
@@ -1900,7 +1901,7 @@ if (typeof Slick === "undefined") {
         if (row === activeRow && columnIdx === activeCell && currentEditor) {
           currentEditor.loadValue(d);
         } else if (d) {
-          formatterResult =  getFormatter(row, m)(row, columnIdx, getDataItemValueForColumn(d, m), m, d);
+          formatterResult =  getFormatter(row, m)(row, columnIdx, getDataItemValueForColumn(d, m), m, d, self);
           applyFormatResultToCellNode(formatterResult, node);
         } else {
           node.innerHTML = "";
@@ -1935,6 +1936,10 @@ if (typeof Slick === "undefined") {
         $viewport.height(viewportH);
       }
 
+      if (!scrollbarDimensions || !scrollbarDimensions.width) {
+        scrollbarDimensions = measureScrollbar();
+      }
+      
       if (options.forceFitColumns) {
         autosizeColumns();
       }
@@ -2041,7 +2046,7 @@ if (typeof Slick === "undefined") {
     function getRenderedRange(viewportTop, viewportLeft) {
       var range = getVisibleRange(viewportTop, viewportLeft);
       var buffer = Math.round(viewportH / options.rowHeight);
-      var minBuffer = 3;
+      var minBuffer = options.minRowBuffer;
 
       if (vScrollDir == -1) {
         range.top -= buffer;
@@ -3828,7 +3833,7 @@ if (typeof Slick === "undefined") {
     // Public API
 
     $.extend(this, {
-      "slickGridVersion": "2.3.12",
+      "slickGridVersion": "2.3.13",
 
       // Events
       "onScroll": new Slick.Event(),
