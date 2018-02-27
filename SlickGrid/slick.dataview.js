@@ -372,45 +372,6 @@
       refresh();
     }
 
-    function sortedAddItem(item) {
-      // NOTE: assumes 'items' are sorted!
-      if(!sortComparer) {
-        throw new Error("sortedAddItem() requires a sort comparer, use sort()");
-      }
-	    insertItem(sortedIndex(item), item);
-    }
-
-    function sortedUpdateItem(item) {
-      // NOTE: assumes 'items' are sorted!
-      if(!sortComparer) {
-        throw new Error("sortedUpdateItem() requires a sort comparer, use sort()");
-      }
-      var old_item = getItemById(item.id);
-      if(sortComparer(old_item, item) !== 0) {
-        // item affects sorting -> must use sorted add
-        deleteItem(item.id);
-        sortedAddItem(item);
-      }
-      else { // update does not affect sorting -> regular update works fine
-        updateItem(item.id, item);
-      }
-    }
-
-    function sortedIndex(searchItem) {
-    var low = 0, high = items.length;
-
-      while (low < high) {
-        var mid = low + high >>> 1;
-        if (sortComparer(items[mid], searchItem) === -1) {
-          low = mid + 1;
-        }
-        else {
-          high = mid;
-        }
-      }
-      return low;
-    }
-      
     function addItem(item) {
       items.push(item);
       updateIdxById(items.length - 1);
@@ -428,6 +389,46 @@
       refresh();
     }
 
+    function sortedAddItem(item) {
+      if(!sortComparer) {
+        throw new Error("sortedAddItem() requires a sort comparer, use sort()");
+      }
+      insertItem(sortedIndex(item), item);
+    }
+
+    function sortedUpdateItem(id, item) {
+      if (idxById[id] === undefined || id !== item[idProperty]) {
+        throw new Error("Invalid or non-matching id " + idxById[id]);
+      }
+      if(!sortComparer) {
+        throw new Error("sortedUpdateItem() requires a sort comparer, use sort()");
+      }
+      var oldItem = getItemById(id);
+      if(sortComparer(oldItem, item) !== 0) {
+        // item affects sorting -> must use sorted add
+        deleteItem(id);
+        sortedAddItem(item);
+      }
+      else { // update does not affect sorting -> regular update works fine
+        updateItem(id, item);
+      }
+    }
+
+    function sortedIndex(searchItem) {
+      var low = 0, high = items.length;
+
+      while (low < high) {
+        var mid = low + high >>> 1;
+        if (sortComparer(items[mid], searchItem) === -1) {
+          low = mid + 1;
+        }
+        else {
+          high = mid;
+        }
+      }
+      return low;
+    }
+      
     function getLength() {
       return rows.length;
     }
@@ -469,10 +470,6 @@
 
       return null;
     }
-
-
-
-
 
     function expandCollapseAllGroups(level, collapse) {
       if (level == null) {
@@ -585,7 +582,7 @@
           group = groups[i];
           group.groups = extractGroups(group.rows, group);
         }
-      }
+      }      
 
       groups.sort(groupingInfos[level].comparer);
 
@@ -964,60 +961,6 @@
      * @method syncGridSelection
      */
     function syncGridSelection(grid, preserveHidden, preserveHiddenOnSelectionChange) {
-      var dv = this;
-      var inHandler;
-      var selectedRowIds = dv.mapRowsToIds(grid.getSelectedRows());
-      var onSelectedRowIdsChanged = new Slick.Event();
-
-      function setSelectedRowIds(rowIds) {
-        if (selectedRowIds.join(",") == rowIds.join(",")) {
-          return;
-        }
-
-        selectedRowIds = rowIds;
-
-        onSelectedRowIdsChanged.notify({
-          "grid": grid,
-          "ids": selectedRowIds,
-          "dataView": dv
-        }, new Slick.EventData(), dv);
-      }
-
-      function update() {
-        if (selectedRowIds.length > 0) {
-          inHandler = true;
-          var selectedRows = dv.mapIdsToRows(selectedRowIds);
-          if (!preserveHidden) {
-            setSelectedRowIds(dv.mapRowsToIds(selectedRows));       
-          }
-          grid.setSelectedRows(selectedRows);
-          inHandler = false;
-        }
-      }
-
-      grid.onSelectedRowsChanged.subscribe(function(e, args) {
-        if (inHandler) { return; }
-        var newSelectedRowIds = dv.mapRowsToIds(grid.getSelectedRows());
-        if (!preserveHiddenOnSelectionChange || !grid.getOptions().multiSelect) {
-          setSelectedRowIds(newSelectedRowIds);
-        } else {
-          // keep the ones that are hidden
-          var existing = $.grep(selectedRowIds, function(id) { return dv.getRowById(id) === undefined; });
-          // add the newly selected ones
-          setSelectedRowIds(existing.concat(newSelectedRowIds));
-        }
-      });
-
-      dv.onRowsChanged.subscribe(update);
-
-      dv.onRowCountChanged.subscribe(update);
-
-      return onSelectedRowIdsChanged;
-    }
-
-    // extend the functionality of syncGridSelection. This is an object that should be newed into existence.
-    
-    function gridSelectionExtender(grid, preserveHidden, preserveHiddenOnSelectionChange) {
       var self = this;
       var inHandler;
       var selectedRowIds = self.mapRowsToIds(grid.getSelectedRows());
@@ -1155,9 +1098,9 @@
       "updateItem": updateItem,
       "insertItem": insertItem,
       "addItem": addItem,
+      "deleteItem": deleteItem,
       "sortedAddItem": sortedAddItem,
       "sortedUpdateItem": sortedUpdateItem,
-      "deleteItem": deleteItem,
       "syncGridSelection": syncGridSelection,
       "syncGridCellCssStyles": syncGridCellCssStyles,
 

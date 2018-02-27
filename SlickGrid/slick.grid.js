@@ -100,7 +100,8 @@ if (typeof Slick === "undefined") {
       preserveCopiedSelectionOnPaste: false,
       showCellSelection: true,
       viewportClass: null,
-	  minRowBuffer: 3
+      minRowBuffer: 3,
+      emulatePagingWhenScrolling: true
     };
 
     var columnDefaults = {
@@ -1806,20 +1807,22 @@ if (typeof Slick === "undefined") {
         return;
       }
 
-      if (rowNodeFromLastMouseWheelEvent === cacheEntry.rowNode) {
-        cacheEntry.rowNode.style.display = 'none';
-        zombieRowNodeFromLastMouseWheelEvent = rowNodeFromLastMouseWheelEvent;
-        zombieRowCacheFromLastMouseWheelEvent = cacheEntry;
-        zombieRowPostProcessedFromLastMouseWheelEvent = postProcessedRows[row];
-        // ignore post processing cleanup in this case - it will be dealt with later
-      } else {
-        if (options.enableAsyncPostRenderCleanup && postProcessedRows[row]) {
-          queuePostProcessedRowForCleanup(cacheEntry, postProcessedRows[row], row);
+      if (cacheEntry.rowNode) {
+        if (rowNodeFromLastMouseWheelEvent === cacheEntry.rowNode) {
+          cacheEntry.rowNode.style.display = 'none';
+          zombieRowNodeFromLastMouseWheelEvent = rowNodeFromLastMouseWheelEvent;
+          zombieRowCacheFromLastMouseWheelEvent = cacheEntry;
+          zombieRowPostProcessedFromLastMouseWheelEvent = postProcessedRows[row];
+          // ignore post processing cleanup in this case - it will be dealt with later
         } else {
-          $canvas[0].removeChild(cacheEntry.rowNode);
+          if (options.enableAsyncPostRenderCleanup && postProcessedRows[row]) {
+            queuePostProcessedRowForCleanup(cacheEntry, postProcessedRows[row], row);
+          } else {
+            $canvas[0].removeChild(cacheEntry.rowNode);
+          }
         }
       }
-
+      
       delete rowsCache[row];
       delete postProcessedRows[row];
       renderedRows--;
@@ -3596,7 +3599,7 @@ if (typeof Slick === "undefined") {
       var pos = stepFn(activeRow, activeCell, activePosX);
       if (pos) {
         var isAddNewRow = (pos.row == getDataLength());
-        scrollCellIntoView(pos.row, pos.cell, !isAddNewRow);
+        scrollCellIntoView(pos.row, pos.cell, !isAddNewRow && options.emulatePagingWhenScrolling);
         setActiveCellInternal(getCellNode(pos.row, pos.cell));
         activePosX = pos.posX;
         return true;
@@ -3833,7 +3836,7 @@ if (typeof Slick === "undefined") {
     // Public API
 
     $.extend(this, {
-      "slickGridVersion": "2.3.13",
+      "slickGridVersion": "2.3.15",
 
       // Events
       "onScroll": new Slick.Event(),
