@@ -113,7 +113,8 @@ if (typeof Slick === "undefined") {
       headerCssClass: null,
       defaultSortAsc: true,
       focusable: true,
-      selectable: true
+      selectable: true,
+      locked: false
     };
 
     // scroller
@@ -374,7 +375,7 @@ if (typeof Slick === "undefined") {
             //.on("click", handleClick)
             .on("scroll", handleScroll);
         $headerScroller
-            //.on("scroll", handleHeaderScroll)
+            .on("scroll", handleHeaderScroll)
             .on("contextmenu", handleHeaderContextMenu)
             .on("click", handleHeaderClick)
             .on("mouseenter", ".slick-header-column", handleHeaderMouseEnter)
@@ -644,16 +645,6 @@ if (typeof Slick === "undefined") {
       }
     }
 
-    function getHeader() {
-      return $header[0];
-    }
-
-    function getHeaderColumn(columnIdOrIdx) {
-      var idx = (typeof columnIdOrIdx === "number" ? columnIdOrIdx : getColumnIndex[columnIdOrIdx]);
-      var $rtn = $header.children().eq(idx);
-      return $rtn && $rtn[0];
-    }
-
     function getHeaderRow() {
       return $headerRow[0];
     }
@@ -666,16 +657,16 @@ if (typeof Slick === "undefined") {
       return $preHeaderPanel[0];
     }
 
-    function getHeaderRowColumn(columnIdOrIdx) {
-      var idx = (typeof columnIdOrIdx === "number" ? columnIdOrIdx : getColumnIndex[columnIdOrIdx]);
-      var $rtn = $headerRow.children().eq(idx);
-      return $rtn && $rtn[0];
+    function getHeaderRowColumn(columnId) {
+      var idx = getColumnIndex(columnId);
+      var $header = $headerRow.children().eq(idx);
+      return $header && $header[0];
     }
 
-    function getFooterRowColumn(columnIdOrIdx) {
-      var idx = (typeof columnIdOrIdx === "number" ? columnIdOrIdx : getColumnIndex[columnIdOrIdx]);
-      var $rtn = $footerRow.children().eq(idx);
-      return $rtn && $rtn[0];
+    function getFooterRowColumn(columnId) {
+      var idx = getColumnIndex(columnId);
+      var $footer = $footerRow.children().eq(idx);
+      return $footer && $footer[0];
     }
 
     function createColumnHeaders() {
@@ -746,9 +737,13 @@ if (typeof Slick === "undefined") {
             .on('mouseleave', onMouseLeave);
         }
 
+        if(m.locked) {
+          header.addClass("slick-column-locked");
+        }
+        
         if (m.sortable) {
           header.addClass("slick-header-sortable");
-          header.append("<span class='" + sortIndicatorCssClass + "' />");
+          header.children().prepend("<span class='" + sortIndicatorCssClass + "' />");
         }
 
         trigger(self.onHeaderCellRendered, {
@@ -881,6 +876,7 @@ if (typeof Slick === "undefined") {
       $headers.filter(":ui-sortable").sortable("destroy");
       $headers.sortable({
         containment: "parent",
+        items: '.slick-header-column:not(.slick-column-locked)',
         distance: 3,
         axis: "x",
         cursor: "default",
@@ -899,6 +895,11 @@ if (typeof Slick === "undefined") {
             $(this).sortable("cancel");
             return;
           }
+
+          var reorderedIds = [];
+          $headers.children().each(function() {
+            reorderedIds.push(this.id);
+          });
 
           var reorderedIds = $headers.sortable("toArray");
           var reorderedColumns = [];
@@ -3844,7 +3845,7 @@ if (typeof Slick === "undefined") {
     // Public API
 
     $.extend(this, {
-      "slickGridVersion": "2.4.0",
+      "slickGridVersion": "2.3.15",
 
       // Events
       "onScroll": new Slick.Event(),
@@ -3962,8 +3963,6 @@ if (typeof Slick === "undefined") {
       "setTopPanelVisibility": setTopPanelVisibility,
       "getPreHeaderPanel": getPreHeaderPanel,
       "setPreHeaderPanelVisibility": setPreHeaderPanelVisibility,
-      "getHeader": getHeader,
-      "getHeaderColumn": getHeaderColumn,
       "setHeaderRowVisibility": setHeaderRowVisibility,
       "getHeaderRow": getHeaderRow,
       "getHeaderRowColumn": getHeaderRowColumn,
