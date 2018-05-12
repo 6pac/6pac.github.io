@@ -55,6 +55,7 @@ if (typeof Slick === "undefined") {
   function SlickGrid(container, data, columns, options) {
     // settings
     var defaults = {
+      alwaysShowVerticalScroll: false,
       explicitInitialization: false,
       rowHeight: 25,
       defaultColumnWidth: 80,
@@ -102,7 +103,8 @@ if (typeof Slick === "undefined") {
       showCellSelection: true,
       viewportClass: null,
       minRowBuffer: 3,
-      emulatePagingWhenScrolling: true
+      emulatePagingWhenScrolling: true, // when scrolling off bottom of viewport, place new row at top of viewport
+      editorCellNavOnLRKeys: false
     };
 
     var columnDefaults = {
@@ -302,7 +304,8 @@ if (typeof Slick === "undefined") {
       }
 
       $viewport = $("<div class='slick-viewport' style='width:100%;overflow:auto;outline:0;position:relative;;'>").appendTo($container);
-      $viewport.css("overflow-y", options.autoHeight ? "hidden" : "auto");
+      $viewport.css("overflow-y", options.alwaysShowVerticalScroll ? "scroll" : (options.autoHeight ? "hidden" : "auto"));
+      $viewport.css("overflow-x", options.forceFitColumns ? "hidden" : "auto");
       if (options.viewportClass) $viewport.toggleClass(options.viewportClass, true);
 
       $canvas = $("<div class='grid-canvas' />").appendTo($viewport);
@@ -1740,7 +1743,7 @@ if (typeof Slick === "undefined") {
       
       // get addl css class names from object type formatter return and from string type return of onBeforeAppendCell
       var addlCssClasses = trigger(self.onBeforeAppendCell, { row: row, cell: cell, grid: self, value: value, dataContext: item }) || '';
-      addlCssClasses += (formatterResult.addClasses ? (addlCssClasses ? ' ' : '') + formatterResult.addClasses : '');
+      addlCssClasses += (formatterResult && formatterResult.addClasses ? (addlCssClasses ? ' ' : '') + formatterResult.addClasses : '');
       
       stringArray.push("<div class='" + cellCss + (addlCssClasses ? ' ' + addlCssClasses : '') + "'>");
 
@@ -1859,14 +1862,15 @@ if (typeof Slick === "undefined") {
         }
       }
       if (options.enableAsyncPostRenderCleanup) { startPostProcessingCleanup(); }
-
     }
 
     function invalidateRow(row) {
+      if (!row && row !== 0) { return; }
       invalidateRows([row]);
     }
 
     function applyFormatResultToCellNode(formatterResult, cellNode, suppressRemove) {
+        if (formatterResult === null || formatterResult === undefined) { formatterResult = ''; }
         if (Object.prototype.toString.call(formatterResult)  !== '[object Object]') { 
             cellNode.innerHTML = formatterResult;
             return;
@@ -1983,7 +1987,7 @@ if (typeof Slick === "undefined") {
 
       var oldViewportHasVScroll = viewportHasVScroll;
       // with autoHeight, we do not need to accommodate the vertical scroll bar
-      viewportHasVScroll = !options.autoHeight && (numberOfRows * options.rowHeight > viewportH);
+      viewportHasVScroll = options.alwaysShowVerticalScroll || !options.autoHeight && (numberOfRows * options.rowHeight > viewportH);
       viewportHasHScroll = (canvasWidth > viewportW - scrollbarDimensions.width);
 
       makeActiveCellNormal();
@@ -2745,7 +2749,9 @@ if (typeof Slick === "undefined") {
           scrollRowIntoView(cell.row, false);
 
           var preClickModeOn = (e.target && e.target.className === Slick.preClickClassName);
-          setActiveCellInternal(getCellNode(cell.row, cell.cell), null, preClickModeOn);
+          var column = columns[cell.cell];
+          var suppressActiveCellChangedEvent = (options.editable && column && column.editor) ? true : false;
+          setActiveCellInternal(getCellNode(cell.row, cell.cell), null, preClickModeOn, suppressActiveCellChangedEvent);
         }
       }
     }
@@ -3700,7 +3706,7 @@ if (typeof Slick === "undefined") {
       var newCell = getCellNode(row, cell);
 
       // if selecting the 'add new' row, start editing right away
-      setActiveCellInternal(newCell, forceEdit || (row === getDataLength()) || options.autoEdit);
+      setActiveCellInternal(newCell, (forceEdit || (row === getDataLength()) || options.autoEdit), null, options.editable);
 
       // if no editor was created, set the focus back on the grid
       if (!currentEditor) {
@@ -3850,7 +3856,7 @@ if (typeof Slick === "undefined") {
     // Public API
 
     $.extend(this, {
-      "slickGridVersion": "2.3.17",
+      "slickGridVersion": "2.3.18",
 
       // Events
       "onScroll": new Slick.Event(),

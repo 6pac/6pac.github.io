@@ -27,13 +27,10 @@
     var scope = this;
 
     this.init = function () {
+      var navOnLR = args.grid.getOptions().editorCellNavOnLRKeys;
       $input = $("<INPUT type=text class='editor-text' />")
           .appendTo(args.container)
-          .on("keydown.nav", function (e) {
-            if (e.keyCode === $.ui.keyCode.LEFT || e.keyCode === $.ui.keyCode.RIGHT) {
-              e.stopImmediatePropagation();
-            }
-          })
+          .on("keydown.nav", navOnLR ? handleKeydownLRNav : handleKeydownLRNoNav)
           .focus()
           .select();
     };
@@ -96,16 +93,12 @@
     var scope = this;
 
     this.init = function () {
-      $input = $("<INPUT type=text class='editor-text' />");
-
-      $input.on("keydown.nav", function (e) {
-        if (e.keyCode === $.ui.keyCode.LEFT || e.keyCode === $.ui.keyCode.RIGHT) {
-          e.stopImmediatePropagation();
-        }
-      });
-
-      $input.appendTo(args.container);
-      $input.focus().select();
+      var navOnLR = args.grid.getOptions().editorCellNavOnLRKeys;
+      $input = $("<INPUT type=text class='editor-text' />")
+      .appendTo(args.container)
+      .on("keydown.nav", navOnLR ? handleKeydownLRNav : handleKeydownLRNoNav)      
+      .focus()
+      .select();
     };
 
     this.destroy = function () {
@@ -165,16 +158,12 @@
     var scope = this;
 
     this.init = function () {
-      $input = $("<INPUT type=text class='editor-text' />");
-
-      $input.on("keydown.nav", function (e) {
-        if (e.keyCode === $.ui.keyCode.LEFT || e.keyCode === $.ui.keyCode.RIGHT) {
-          e.stopImmediatePropagation();
-        }
-      });
-
-      $input.appendTo(args.container);
-      $input.focus().select();
+      var navOnLR = args.grid.getOptions().editorCellNavOnLRKeys;
+      $input = $("<INPUT type=text class='editor-text' />")
+      .appendTo(args.container)
+      .on("keydown.nav", navOnLR ? handleKeydownLRNav : handleKeydownLRNoNav)      
+      .focus()
+      .select();
     };
 
     this.destroy = function () {
@@ -216,7 +205,7 @@
       } else {
         rtn = rtn || 0;
       }
-      
+
       var decPlaces = getDecimalPlaces();
       if (decPlaces !== null
       && (rtn || rtn===0)
@@ -540,6 +529,7 @@
 
     this.init = function () {
       var $container = $("body");
+      var navOnLR = args.grid.getOptions().editorCellNavOnLRKeys;
 
       $wrapper = $("<DIV style='z-index:10000;position:absolute;background:white;padding:5px;border:3px solid gray; -moz-border-radius:10px; border-radius:10px;'/>")
           .appendTo($container);
@@ -552,7 +542,7 @@
 
       $wrapper.find("button:first").on("click", this.save);
       $wrapper.find("button:last").on("click", this.cancel);
-      $input.on("keydown", this.handleKeyDown);
+      $input.on("keydown", this.handleKeyDown); 
 
       scope.position(args.position);
       $input.focus().select();
@@ -570,6 +560,17 @@
       } else if (e.which == $.ui.keyCode.TAB) {
         e.preventDefault();
         args.grid.navigateNext();
+      } else if (e.which == $.ui.keyCode.LEFT || e.which == $.ui.keyCode.RIGHT) {
+        if (args.grid.getOptions().editorCellNavOnLRKeys) {
+          var cursorPosition = this.selectionStart;
+          var textLength = this.value.length;
+          if (e.keyCode === $.ui.keyCode.LEFT && cursorPosition === 0) {
+            args.grid.navigatePrev();
+          }
+          if (e.keyCode === $.ui.keyCode.RIGHT && cursorPosition >= textLength-1) {
+            args.grid.navigateNext();
+          }
+        }
       }
     };
 
@@ -637,4 +638,25 @@
 
     this.init();
   }
+  
+  /*
+   * Depending on the value of Grid option 'editorCellNavOnLRKeys', us 
+   * Navigate to the cell on the left if the cursor is at the beginning of the input string
+   * and to the right cell if it's at the end. Otherwise, move the cursor within the text
+   */
+  function handleKeydownLRNav(e) {
+    var cursorPosition = this.selectionStart;
+    var textLength = this.value.length;
+    if ((e.keyCode === $.ui.keyCode.LEFT && cursorPosition > 0) ||
+         e.keyCode === $.ui.keyCode.RIGHT && cursorPosition < textLength-1) {
+      e.stopImmediatePropagation();
+    }
+  }
+
+  function handleKeydownLRNoNav(e) {
+    if (e.keyCode === $.ui.keyCode.LEFT || e.keyCode === $.ui.keyCode.RIGHT) {	
+      e.stopImmediatePropagation();	
+    }	
+  }
+  
 })(jQuery);
