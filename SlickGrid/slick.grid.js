@@ -63,6 +63,7 @@ if (typeof Slick === "undefined") {
       leaveSpaceForNewRows: false,
       editable: false,
       autoEdit: true,
+      suppressActiveCellChangeOnEdit: false,
       enableCellNavigation: true,
       enableColumnReorder: true,
       asyncEditorLoading: false,
@@ -2750,7 +2751,7 @@ if (typeof Slick === "undefined") {
 
           var preClickModeOn = (e.target && e.target.className === Slick.preClickClassName);
           var column = columns[cell.cell];
-          var suppressActiveCellChangedEvent = (options.editable && column && column.editor) ? true : false;
+          var suppressActiveCellChangedEvent = (options.editable && column && column.editor && options.suppressActiveCellChangeOnEdit) ? true : false;
           setActiveCellInternal(getCellNode(cell.row, cell.cell), null, preClickModeOn, suppressActiveCellChangedEvent);
         }
       }
@@ -3856,7 +3857,7 @@ if (typeof Slick === "undefined") {
     // Public API
 
     $.extend(this, {
-      "slickGridVersion": "2.3.18",
+      "slickGridVersion": "2.3.19",
 
       // Events
       "onScroll": new Slick.Event(),
