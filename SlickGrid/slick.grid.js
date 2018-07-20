@@ -1326,6 +1326,9 @@ if (typeof Slick === "undefined") {
 
       applyColumnHeaderWidths();
       updateCanvasWidth(true);
+
+      trigger(self.onAutosizeColumns, { grid: self}, e);      
+      
       if (reRender) {
         invalidateAllRows();
         render();
@@ -3857,7 +3860,7 @@ if (typeof Slick === "undefined") {
     // Public API
 
     $.extend(this, {
-      "slickGridVersion": "2.3.19",
+      "slickGridVersion": "2.3.20",
 
       // Events
       "onScroll": new Slick.Event(),
@@ -3896,6 +3899,7 @@ if (typeof Slick === "undefined") {
       "onDragEnd": new Slick.Event(),
       "onSelectedRowsChanged": new Slick.Event(),
       "onCellCssStylesChanged": new Slick.Event(),
+      "onAutosizeColumns": new Slick.Event(),
 
       // Methods
       "registerPlugin": registerPlugin,

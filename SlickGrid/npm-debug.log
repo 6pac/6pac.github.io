@@ -1,0 +1,110 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'C:\\Program Files\\nodejs\\node.exe',
+1 verbose cli   'C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js',
+1 verbose cli   'publish' ]
+2 info using npm@3.10.8
+3 info using node@v6.9.1
+4 verbose publish [ '.' ]
+5 silly cache add args [ '.', null ]
+6 verbose cache add spec .
+7 silly cache add parsed spec Result {
+7 silly cache add   raw: '.',
+7 silly cache add   scope: null,
+7 silly cache add   escapedName: null,
+7 silly cache add   name: null,
+7 silly cache add   rawSpec: '.',
+7 silly cache add   spec: 'G:\\Dropbox\\Work\\SlickGrid\\SlickGrid-6pac',
+7 silly cache add   type: 'directory' }
+8 verbose addLocalDirectory C:\Users\Operator\AppData\Roaming\npm-cache\slickgrid\2.3.20\package.tgz not in flight; packing
+9 verbose correctMkdir C:\Users\Operator\AppData\Roaming\npm-cache correctMkdir not in flight; initializing
+10 info lifecycle slickgrid@2.3.20~prepublish: slickgrid@2.3.20
+11 silly lifecycle slickgrid@2.3.20~prepublish: no script for prepublish, continuing
+12 verbose tar pack [ 'C:\\Users\\Operator\\AppData\\Roaming\\npm-cache\\slickgrid\\2.3.20\\package.tgz',
+12 verbose tar pack   'G:\\Dropbox\\Work\\SlickGrid\\SlickGrid-6pac' ]
+13 verbose tarball C:\Users\Operator\AppData\Roaming\npm-cache\slickgrid\2.3.20\package.tgz
+14 verbose folder G:\Dropbox\Work\SlickGrid\SlickGrid-6pac
+15 verbose addLocalTarball adding from inside cache C:\Users\Operator\AppData\Roaming\npm-cache\slickgrid\2.3.20\package.tgz
+16 verbose correctMkdir C:\Users\Operator\AppData\Roaming\npm-cache correctMkdir not in flight; initializing
+17 silly cache afterAdd slickgrid@2.3.20
+18 verbose afterAdd C:\Users\Operator\AppData\Roaming\npm-cache\slickgrid\2.3.20\package\package.json not in flight; writing
+19 verbose correctMkdir C:\Users\Operator\AppData\Roaming\npm-cache correctMkdir not in flight; initializing
+20 verbose afterAdd C:\Users\Operator\AppData\Roaming\npm-cache\slickgrid\2.3.20\package\package.json written
+21 silly publish { name: 'slickgrid',
+21 silly publish   version: '2.3.20',
+21 silly publish   description: 'A lightning fast JavaScript grid/spreadsheet',
+21 silly publish   main: 'slick.core.js',
+21 silly publish   directories: { example: 'examples', test: 'tests' },
+21 silly publish   repository:
+21 silly publish    { type: 'git',
+21 silly publish      url: 'git+https://github.com/6pac/SlickGrid.git' },
+21 silly publish   keywords: [ 'slickgrid', 'grid' ],
+21 silly publish   author: { name: 'Michael Leibman', email: 'michael.leibman@gmail.com' },
+21 silly publish   contributors: [ { name: 'Ben McIntyre', email: 'email.ben.mcintyre@gmail.com' } ],
+21 silly publish   license: 'MIT',
+21 silly publish   bugs: { url: 'https://github.com/6pac/SlickGrid/issues' },
+21 silly publish   homepage: 'https://github.com/6pac/SlickGrid#readme',
+21 silly publish   scripts: { test: 'echo "Error: no test specified" && exit 1' },
+21 silly publish   dependencies: { jquery: '>=1.8.0', 'jquery-ui': '>=1.8.0' },
+21 silly publish   gitHead: '387df5cf4acede6e09149007eef7909f69a178b5',
+21 silly publish   readme: '## This is the 6pac SlickGrid repo\r\n\r\nCheck out the NEW SlickGrid Website! http://slickgrid.net/\r\n\r\nThis is the acknowledged most active non-customised fork of SlickGrid.\r\n\r\nIt aims to be a viable alternative master repo, building on the legacy of the mleibman/SlickGrid master branch, keeping libraries up to date and applying small, safe core patches and enhancements without turning into a personalised build.\r\n\r\nCheck out the [examples](https://github.com/6pac/SlickGrid/wiki/Examples) for examples demonstrating new features and use cases, such as dynamic grid creation and editors with third party controls.\r\n\r\nAlso check out the [wiki](https://github.com/6pac/SlickGrid/wiki) for news and documentation.\r\n',
+21 silly publish   readmeFilename: 'README.md',
+21 silly publish   _id: 'slickgrid@2.3.20',
+21 silly publish   _shasum: '75da547d26ddffdff840910b3a39c1518ab44d09',
+21 silly publish   _from: '.' }
+22 verbose getPublishConfig undefined
+23 silly mapToRegistry name slickgrid
+24 silly mapToRegistry using default registry
+25 silly mapToRegistry registry https://registry.npmjs.org/
+26 silly mapToRegistry data Result {
+26 silly mapToRegistry   raw: 'slickgrid',
+26 silly mapToRegistry   scope: null,
+26 silly mapToRegistry   escapedName: 'slickgrid',
+26 silly mapToRegistry   name: 'slickgrid',
+26 silly mapToRegistry   rawSpec: '',
+26 silly mapToRegistry   spec: 'latest',
+26 silly mapToRegistry   type: 'tag' }
+27 silly mapToRegistry uri https://registry.npmjs.org/slickgrid
+28 verbose publish registryBase https://registry.npmjs.org/
+29 silly publish uploading C:\Users\Operator\AppData\Roaming\npm-cache\slickgrid\2.3.20\package.tgz
+30 verbose request uri https://registry.npmjs.org/slickgrid
+31 verbose request sending authorization for write operation
+32 info attempt registry request try #1 at 5:21:48 PM
+33 verbose request using bearer token for auth
+34 verbose request id 4c8f1a29a07be6c4
+35 http request PUT https://registry.npmjs.org/slickgrid
+36 http 401 https://registry.npmjs.org/slickgrid
+37 verbose headers { date: 'Fri, 20 Jul 2018 07:51:57 GMT',
+37 verbose headers   'content-type': 'application/json',
+37 verbose headers   'content-length': '54',
+37 verbose headers   connection: 'keep-alive',
+37 verbose headers   'set-cookie': [ '__cfduid=d0365482fd9c7c681545a8a4649dfb6a71532073115; expires=Sat, 20-Jul-19 07:51:55 GMT; path=/; domain=.registry.npmjs.org; HttpOnly' ],
+37 verbose headers   'cf-ray': '43d3d84429976599-SYD',
+37 verbose headers   'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+37 verbose headers   'npm-notice': 'Due to a recent security incident, all user tokens have been invalidated. Please see https://status.npmjs.org/incidents/dn7c1fgrr7ng for more details. To generate a new token, visit https://www.npmjs.com/settings/~/tokens or run "npm login".',
+37 verbose headers   server: 'cloudflare' }
+38 warn notice Due to a recent security incident, all user tokens have been invalidated. Please see https://status.npmjs.org/incidents/dn7c1fgrr7ng for more details. To generate a new token, visit https://www.npmjs.com/settings/~/tokens or run "npm login".
+39 verbose request invalidating C:\Users\Operator\AppData\Roaming\npm-cache\registry.npmjs.org\slickgrid on PUT
+40 error publish Failed PUT 401
+41 verbose stack Error: You must be logged in to publish packages. : slickgrid
+41 verbose stack     at makeError (C:\Program Files\nodejs\node_modules\npm\node_modules\npm-registry-client\lib\request.js:302:12)
+41 verbose stack     at CachingRegistryClient.<anonymous> (C:\Program Files\nodejs\node_modules\npm\node_modules\npm-registry-client\lib\request.js:290:14)
+41 verbose stack     at Request._callback (C:\Program Files\nodejs\node_modules\npm\node_modules\npm-registry-client\lib\request.js:210:14)
+41 verbose stack     at Request.self.callback (C:\Program Files\nodejs\node_modules\npm\node_modules\request\request.js:187:22)
+41 verbose stack     at emitTwo (events.js:106:13)
+41 verbose stack     at Request.emit (events.js:191:7)
+41 verbose stack     at Request.<anonymous> (C:\Program Files\nodejs\node_modules\npm\node_modules\request\request.js:1044:10)
+41 verbose stack     at emitOne (events.js:96:13)
+41 verbose stack     at Request.emit (events.js:188:7)
+41 verbose stack     at IncomingMessage.<anonymous> (C:\Program Files\nodejs\node_modules\npm\node_modules\request\request.js:965:12)
+42 verbose statusCode 401
+43 verbose pkgid slickgrid
+44 verbose cwd G:\Dropbox\Work\SlickGrid\SlickGrid-6pac
+45 error Windows_NT 10.0.17134
+46 error argv "C:\\Program Files\\nodejs\\node.exe" "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js" "publish"
+47 error node v6.9.1
+48 error npm  v3.10.8
+49 error code E401
+50 error You must be logged in to publish packages. : slickgrid
+51 error If you need help, you may report this error at:
+51 error     <https://github.com/npm/npm/issues>
+52 verbose exit [ 1, true ]
