@@ -3871,7 +3871,7 @@ if (typeof Slick === "undefined") {
       if (!selectionModel) {
         throw new Error("Selection model is not set");
       }
-      if (!grid.getEditorLock().isActive()) {
+      if (self && self.getEditorLock && !self.getEditorLock().isActive()) {
         selectionModel.setSelectedRanges(rowsToRanges(rows));
       }
     }
@@ -3905,7 +3905,7 @@ if (typeof Slick === "undefined") {
     // Public API
 
     $.extend(this, {
-      "slickGridVersion": "2.3.22",
+      "slickGridVersion": "2.3.23",
 
       // Events
       "onScroll": new Slick.Event(),
