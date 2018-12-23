@@ -19,7 +19,7 @@
    *      iconCssClass: "fa fa-bars",                 // you can provide iconImage OR iconCssClass
    *      leaveOpen: false,                           // do we want to leave the Grid Menu open after a command execution? (false by default)
    *      menuWidth: 18,                              // width that will be use to resize the column header container (18 by default)
-   *      resizeOnShowHeaderRow: true,                // true by default
+   *      resizeOnShowHeaderRow: false,               // false by default
    *
    *      // the last 2 checkboxes titles
    *      hideForceFitButton: false,                  // show/hide checkbox near the end "Force Fit Columns"
@@ -94,6 +94,7 @@
 
     function SlickGridMenu(columns, grid, options) {
       var _grid = grid;
+      var _gridOptions;
       var _gridUid = (grid && grid.getUID) ? grid.getUID() : '';
       var _isMenuOpen = false;
       var _options = options;
@@ -113,8 +114,14 @@
       };
 
       function init(grid) {
+        _gridOptions = grid.getOptions();
         var gridMenuWidth = (_options.gridMenu && _options.gridMenu.menuWidth) || _defaults.menuWidth;
-        var $header = $('.' + _gridUid + ' .slick-header');
+        var $header;
+        if (_gridOptions && _gridOptions.frozenColumn && _gridOptions.frozenColumn > 0 ) {
+          $header = $('.' + _gridUid + ' .slick-header-right');
+        } else {
+          $header = $('.' + _gridUid + ' .slick-header-left');
+        }
         $header.attr('style', 'width: calc(100% - ' + gridMenuWidth +'px)');
 		
         // subscribe to the grid, when it's destroyed, we should also destroy the Grid Menu
@@ -123,7 +130,7 @@
         // if header row is enabled, we need to resize it's width also
         var enableResizeHeaderRow = (_options.gridMenu && _options.gridMenu.resizeOnShowHeaderRow != undefined) ? _options.gridMenu.resizeOnShowHeaderRow : _defaults.resizeOnShowHeaderRow;
         if(enableResizeHeaderRow && _options.showHeaderRow) {
-          var $headerrow = $('.slick-headerrow');
+          var $headerrow = $('.' + _gridUid + '.slick-headerrow');
           $headerrow.attr('style', 'width: calc(100% - ' + gridMenuWidth +'px)');
         }
 
