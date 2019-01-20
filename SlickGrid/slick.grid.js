@@ -1783,16 +1783,8 @@ if (typeof Slick === "undefined") {
     }
 
     function setFrozenOptions() {
-      options.frozenColumn = ( options.frozenColumn >= 0
-        && options.frozenColumn < columns.length
-        )
+      options.frozenColumn = (options.frozenColumn >= 0 && options.frozenColumn < columns.length)
         ? parseInt(options.frozenColumn)
-        : -1;
-
-      options.frozenRow = ( options.frozenRow >= 0
-        && options.frozenRow < numVisibleRows
-        )
-        ? parseInt(options.frozenRow)
         : -1;
 
       if (options.frozenRow > -1) {
@@ -2601,10 +2593,10 @@ if (typeof Slick === "undefined") {
             colspan = ii - i;
           }
         }
-
+        
         // Do not render cells outside of the viewport.
         if (columnPosRight[Math.min(ii - 1, i + colspan - 1)] > range.leftPx) {
-          if (columnPosLeft[i] > range.rightPx) {
+          if (!m.alwaysRenderColumn && columnPosLeft[i] > range.rightPx) {
             // All columns to the right are outside the range.
             break;
           }
@@ -2614,7 +2606,7 @@ if (typeof Slick === "undefined") {
           } else {
             appendCellHtml(stringArrayL, row, i, colspan, d);
           }
-        } else if (hasFrozenColumns() && ( i <= options.frozenColumn )) {
+        } else if (m.alwaysRenderColumn || (hasFrozenColumns() && i <= options.frozenColumn)) {
           appendCellHtml(stringArrayL, row, i, colspan, d);
         }
 
@@ -2891,7 +2883,7 @@ if (typeof Slick === "undefined") {
     }
 
     function getViewportWidth() {
-      viewportW = parseFloat($.css($container[0], "width", true));
+      viewportW = parseFloat($container.width());
     }
 
     function resizeCanvas() {
@@ -3191,6 +3183,11 @@ if (typeof Slick === "undefined") {
 
         // Ignore frozen columns
         if (i <= options.frozenColumn) {
+          continue;
+        }
+        
+        // Ignore alwaysRenderedColumns
+        if (Array.isArray(columns) && columns[i] && columns[i].alwaysRenderColumn){
           continue;
         }
 
@@ -5171,7 +5168,7 @@ if (typeof Slick === "undefined") {
     // Public API
 
     $.extend(this, {
-      "slickGridVersion": "2.4.1",
+      "slickGridVersion": "2.4.2",
 
       // Events
       "onScroll": new Slick.Event(),
