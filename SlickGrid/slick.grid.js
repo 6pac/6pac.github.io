@@ -539,9 +539,8 @@ if (typeof Slick === "undefined") {
         $viewport
             .on("scroll", handleScroll);
 
-        if (jQuery.fn.mousewheel && ( options.frozenColumn > -1 || hasFrozenRows )) {
-          $viewport
-            .on("mousewheel", handleMouseWheel);
+        if (jQuery.fn.mousewheel) {
+          $viewport.on("mousewheel", handleMouseWheel);
         }
 
         $headerScroller
@@ -577,11 +576,6 @@ if (typeof Slick === "undefined") {
             .on("mouseenter", ".slick-cell", handleMouseEnter)
             .on("mouseleave", ".slick-cell", handleMouseLeave);
 
-        // Work around http://crbug.com/312427.
-        if (navigator.userAgent.toLowerCase().match(/webkit/) &&
-            navigator.userAgent.toLowerCase().match(/macintosh/)) {
-          $canvas.on("mousewheel", handleMouseWheel);
-        }
         restoreCssFromHiddenInit();
       }
     }
@@ -2239,6 +2233,7 @@ if (typeof Slick === "undefined") {
     }
 
     function handleSelectedRangesChanged(e, ranges) {
+      var previousSelectedRows = selectedRows.slice(0); // shallow copy previously selected rows for later comparison
       selectedRows = [];
       var hash = {};
       for (var i = 0; i < ranges.length; i++) {
@@ -2257,7 +2252,14 @@ if (typeof Slick === "undefined") {
 
       setCellCssStyles(options.selectedCellCssClass, hash);
 
-      trigger(self.onSelectedRowsChanged, {rows: getSelectedRows()}, e);
+      if (simpleArrayEquals(previousSelectedRows, selectedRows)) {
+        trigger(self.onSelectedRowsChanged, {rows: getSelectedRows()}, e);
+      }
+    }
+
+    // compare 2 simple arrays (integers or strings only, do not use to compare object arrays)
+    function simpleArrayEquals(arr1, arr2) {
+      return Array.isArray(arr1) && Array.isArray(arr2) && arr2.sort().toString() !== arr1.sort().toString();
     }
 
     function getColumns() {
@@ -2593,7 +2595,7 @@ if (typeof Slick === "undefined") {
             colspan = ii - i;
           }
         }
-        
+
         // Do not render cells outside of the viewport.
         if (columnPosRight[Math.min(ii - 1, i + colspan - 1)] > range.leftPx) {
           if (!m.alwaysRenderColumn && columnPosLeft[i] > range.rightPx) {
@@ -2657,8 +2659,9 @@ if (typeof Slick === "undefined") {
       // get addl css class names from object type formatter return and from string type return of onBeforeAppendCell
       var addlCssClasses = trigger(self.onBeforeAppendCell, { row: row, cell: cell, value: value, dataContext: item }) || '';
       addlCssClasses += (formatterResult && formatterResult.addClasses ? (addlCssClasses ? ' ' : '') + formatterResult.addClasses : '');
+      var toolTip = formatterResult && formatterResult.toolTip ? "title='" + formatterResult.toolTip + "'" : '';
 
-      stringArray.push("<div class='" + cellCss + (addlCssClasses ? ' ' + addlCssClasses : '') + "'>");
+      stringArray.push("<div class='" + cellCss + (addlCssClasses ? ' ' + addlCssClasses : '') + "' " + toolTip + ">");
 
       // if there is a corresponding row (if not, this is the Add New row or this data hasn't been loaded yet)
       if (item) {
@@ -2796,15 +2799,18 @@ if (typeof Slick === "undefined") {
     function applyFormatResultToCellNode(formatterResult, cellNode, suppressRemove) {
         if (formatterResult === null || formatterResult === undefined) { formatterResult = ''; }
         if (Object.prototype.toString.call(formatterResult)  !== '[object Object]') {
-            cellNode.innerHTML = formatterResult;
-            return;
+          cellNode.innerHTML = formatterResult;
+          return;
         }
         cellNode.innerHTML = formatterResult.text;
         if (formatterResult.removeClasses && !suppressRemove) {
-            $(cellNode).removeClass(formatterResult.removeClasses);
+          $(cellNode).removeClass(formatterResult.removeClasses);
         }
         if (formatterResult.addClasses) {
-            $(cellNode).addClass(formatterResult.addClasses);
+          $(cellNode).addClass(formatterResult.addClasses);
+        }
+        if (formatterResult.toolTip) {
+          $(cellNode).attr("title", formatterResult.toolTip);
         }
     }
 
@@ -3185,7 +3191,7 @@ if (typeof Slick === "undefined") {
         if (i <= options.frozenColumn) {
           continue;
         }
-        
+
         // Ignore alwaysRenderedColumns
         if (Array.isArray(columns) && columns[i] && columns[i].alwaysRenderColumn){
           continue;
@@ -4538,7 +4544,10 @@ if (typeof Slick === "undefined") {
 
     function scrollPage(dir) {
       var deltaRows = dir * numVisibleRows;
-      scrollTo((getRowFromPosition(scrollTop) + deltaRows) * options.rowHeight);
+        /// First fully visible row crosses the line with
+        /// y == bottomOfTopmostFullyVisibleRow
+      var bottomOfTopmostFullyVisibleRow = scrollTop + options.rowHeight - 1;
+      scrollTo((getRowFromPosition(bottomOfTopmostFullyVisibleRow) + deltaRows) * options.rowHeight);
       render();
 
       if (options.enableCellNavigation && activeRow != null) {
@@ -5168,7 +5177,7 @@ if (typeof Slick === "undefined") {
     // Public API
 
     $.extend(this, {
-      "slickGridVersion": "2.4.2",
+      "slickGridVersion": "2.4.3",
 
       // Events
       "onScroll": new Slick.Event(),
