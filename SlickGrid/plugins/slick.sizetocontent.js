@@ -1,15 +1,5 @@
 (function ($) {
 
-    $.extend(true, window, {
-        "Slick": {
-            "Plugins": {
-                "AutoColumnSize": AutoColumnSize
-            },
-            "ViewportMode" : ViewportMode,
-            "AutoWidthStrategy" : AutoWidthStrategy
-        }
-    });
-
     // AutoColumnSize Overview
     // -----------------------
     // The AutoColumnSize plugin is designed to allow the grid to make intelligent choices about the 
@@ -65,14 +55,15 @@
     //     
     //   .ignoreHeaderText: false
     //   .colValueArray: undefined
+    //   .allowAddlPercent: undefined
     //   .formatterOverride: undefined
-    //   .widthPx: undefined
-    //   .minWidthPx: undefined
-    //   .maxWidthPx: undefined
-    //   .autoWidthStrategy: TopNRows (Locked, Guide, Top1Row, TopNRows, AllRows)
+    //   .autosizeMode: ContentIntelligent (Lock, Guide, Content, ContentIntelligent)
+    //   .rowSelectionModeOnInit: undefined (FirstRow, LastRow)
+    //   .rowSelectionMode: FirstNRows (FirstRow, FirstNRows, AllRows)
+    //   .valueFilterMode: none (None, DeDuplicate, GetGreatest, GetLongestText, CanvasTextSize, CompareFunction())
     //   .sizeToRemaining: undefined
-    //   .checkRowCount: 100
-    //
+    //   .rowSelectionCount: 100
+    //   
     //  DETAILS
     //
     //  ignoreHeaderText
@@ -104,6 +95,9 @@
     //  checkRowCount
     //    - in AutoWidthStrategy.TopNRows, the number of rows to check for widest content.
     //
+    //  deDuplicate
+    //    - create a unique value dictionary for values before doing browser cell simulation
+    //
     //
     // AutoWidthStrategy
     // -----------------
@@ -122,18 +116,22 @@
     // TopNRows:
     //   - content width of the widest of the first .checkRowCount rows will be used as the column width.
     //
+    // Last1Row:
+    //   - content width of the last row only will be used as the column width. This is useful where
+    //     an incrementing number is present.
+    //
     // AllRows:
     //   - content width of the widest of all the rows will be used as the column width.
     //
     
-    ViewportMode = {
+    var ViewportMode = {
         Scroll: 'SC',
         FitColsToViewport: 'FV',
         FitViewportToCols: 'FC'
     };
     if (Object.freeze) { Object.freeze(ViewportMode); }
     
-    AutoWidthStrategy = {
+    var AutoWidthStrategy = {
         Locked: 'LK',
         Guide: 'GU',
         Top1Row: 'TOP1',
@@ -142,42 +140,68 @@
     };
     if (Object.freeze) { Object.freeze(AutoWidthStrategy); }
     
-    function AutoColumnSize(options) {
+    function SizeToContent(options) {
+        //-----------------------------------------------
+        // Core plugin management
+        //-----------------------------------------------
+        
         var _grid;
         var _self = this;
         var _handler = new Slick.EventHandler();
-        var _defaults = {
-            maxWidth: 800
-        };
-
-        var context;
-
-        // _grid.getContainerNode()
-        function getViewportWidth() {
-          viewportW = parseFloat($container.width());
-        }
         
+        var _defaultPluginOptions = {
+            viewportMode: ViewportMode.FitColsToViewport,
+            switchToScrollModeWidthPercent: undefined,
+            minViewportWidthPx: undefined,
+            maxViewportWidthPx: undefined
+        };     
+        
+        var _defaultColumnOptions = {
+            autoWidthStrategy: AutoWidthStrategy.TopNRows,
+            ignoreHeaderText: false,
+            colValueArray: undefined,
+            formatterOverride: undefined,
+            widthPx: undefined,
+            minWidthPx: undefined,
+            maxWidthPx: undefined,
+            sizeToRemaining: false,
+            checkRowCount: 100,
+            deDuplicate: true
+        };
+        
+        var canvas = null;
+        var canvas_context = null;
+
         function init(grid) {
-            options = $.extend(true, {}, _defaults, options);
+            options = $.extend(true, {}, _defaultPluginOptions, options);
             _grid = grid;
-            maxWidth = options.maxWidth;
 
             _handler
                 .subscribe(_grid.onHeaderCellRendered, handleHeaderCellRendered)
                 .subscribe(_grid.onBeforeHeaderCellDestroy, handleBeforeHeaderCellDestroy)
                 .subscribe(_grid.onKeyDown, handleControlKeys);
 
-            context = document.createElement("canvas").getContext("2d");
+            // test for brower canvas support, canvas_context!=null if supported
+            canvas = document.createElement("canvas");
+            if (canvas.getContext) { canvas_context = canvas.getContext("2d"); }
         }
 
+        function getOptions() {
+          return options;
+        }
+
+        function setOptions(newOptions) {
+          options = $.extend(options, newOptions);
+        }
+        
         function handleHeaderCellRendered(e, args) {
             var c = args.node;
-            $(c).on("dblclick.autosize", ".slick-resizable-handle", reSizeColumn);            
+            $(c).on("dblclick.autosize", ".slick-resizable-handle", columnUIResize);            
         }
 
         function handleBeforeHeaderCellDestroy(e, args) {           
             var c = args.node;
-            $(c).off("dblclick.autosize", ".slick-resizable-handle", reSizeColumn);
+            $(c).off("dblclick.autosize", ".slick-resizable-handle", columnUIResize);
         }
 
         function destroy() {
@@ -190,6 +214,15 @@
             }
         }
 
+        //-----------------------------------------------
+        //Autosizing
+        //-----------------------------------------------
+        
+        // _grid.getContainerNode()
+        function getViewportWidth() {
+          viewportW = parseFloat($container.width());
+        }
+        
         function resizeAllColumns() {
             if (_grid.getContainerNode().offsetParent === null) return;
             var allColumns = _grid.getColumns();
@@ -198,11 +231,11 @@
             allColumns.forEach(function (columnDef, index) {
                 if (columnDef && (!columnDef.resizable || columnDef._autoCalcWidth === true)) return;
                 var el = document.getElementById(_grid.getUID() + columnDef.id);
-                var headerWidth = getElementWidth(el);
+                var headerWidth = 0; //getElementWidth(el);
                 var autoSizeWidth = Math.max(headerWidth, getMaxColumnTextWidth(columnDef, index)) + 1;
 
                 // Check we are smaller than the maxWidth if provided
-                autoSizeWidth = Math.min(maxWidth, autoSizeWidth);
+                autoSizeWidth = Math.min(options.maxWidth, autoSizeWidth);
 
                 // Save a piece of info against column so we don't calculate every time we call resize
                 columnDef._autoCalcWidth = true;
@@ -235,7 +268,45 @@
             }
         }
 
-        function reSizeColumn(e) {
+        function getColHeaderWidths() {
+          var rtn = [];
+          var allColumns = _grid.getColumns();
+          allColumns.forEach(function (columnDef, index) {
+              rtn.push(getColHeaderWidth(columnDef));
+          });
+          return rtn;
+        }
+
+        function getColHeaderWidth(columnDef) {
+          var width = 0;
+          //if (columnDef && (!columnDef.resizable || columnDef._autoCalcWidth === true)) return;
+          var headerColElId = _grid.getUID() + columnDef.id;
+          var headerColEl = document.getElementById(headerColElId);
+          var dummyHeaderColElId = headerColElId + "_";
+          if (headerColEl) {
+            // headers have been created, use clone technique
+            var clone = headerColEl.cloneNode(true);
+            clone.id = dummyHeaderColElId;
+            clone.style.cssText = 'position: absolute; visibility: hidden;right: auto;text-overflow: initial;white-space: nowrap;';
+            headerColEl.parentNode.insertBefore(clone, headerColEl);
+            width = clone.offsetWidth;
+            clone.parentNode.removeChild(clone);
+          } else {
+            // headers have not yet been created, create a new node
+            var header = _grid.getHeader(columnDef);
+            headerColEl = $("<div class='ui-state-default slick-header-column' />")
+              .html("<span class='slick-column-name'>" + columnDef.name + "</span>")
+              .attr("id", dummyHeaderColElId)
+              .css({ "position": "absolute", "visibility": "hidden", "right": "auto", "text-overflow:": "initial", "white-space": "nowrap" })
+              .addClass(columnDef.headerCssClass || "")
+              .appendTo(header);        
+            width = headerColEl[0].offsetWidth;
+            header[0].removeChild(headerColEl[0]);
+          }   
+          return width;
+        }
+            
+        function columnUIResize(e) {
             var headerEl = $(e.currentTarget).closest('.slick-header-column');
             var columnDef = headerEl.data('column');
 
@@ -260,95 +331,158 @@
             }
         }
 
-        function getMaxColumnTextWidth(columnDef, colIndex) {
+    //   .ignoreHeaderText: false
+    //   .colValueArray: undefined
+    //   .formatterOverride: undefined
+    //   .autosizeMode: Content (Lock, Guide, Content)
+    //   .rowSelectionMode: FirstNRows (First1Row, FirstNRows, Last1Row, AllRows)
+    //   .valueFilterMode: none (None, DeDuplicate, GetGreatest, CompareFunction())
+    //   .sizeToRemaining: undefined
+    //   .rowSelectionCount: 100
+
+        function getColTextWidths(mode) {
+          var $gridCanvas = $(_grid.getCanvasNode(0, 0));
+          var rtn = [];
+          var allColumns = _grid.getColumns();
+          allColumns.forEach(function (columnDef, index) {
+              rtn.push(getW(columnDef, $gridCanvas, mode));
+          });
+          return rtn;
+        }
+        
+        function getW(columnDef, $gridCanvas, mode) {
+            var data = _grid.getData().getItems();
+            var colIndex = _grid.getColumnIndex(columnDef.id);
+
+            var $rowEl = $('<div class="slick-row ui-widget-content"></div>');
+            var $cellEl = $('<div class="slick-cell"></div>');
+            $cellEl.css({
+                "position": "absolute",
+                "visibility": "hidden",
+                "text-overflow": "initial",
+                "white-space": "nowrap"
+            });
+            $rowEl.append($cellEl);
+ 
+            var len, max = 0, text, maxText, formatterResult, maxWidth = 0;
+             
+            if (mode === "C") {
+              $gridCanvas.append($rowEl);
+              
+              canvas_context.font = $cellEl.css("font-size") + " " + $cellEl.css("font-family");
+              $(data).each(function (index, row) {
+                  text = '' + row[columnDef.field];
+                  len = text ? canvas_context.measureText(text).width : 0;
+                  if (len > max) { max = len; maxText = text; }
+              });
+              
+              $cellEl.html(maxText);
+              len = $cellEl.width();
+              
+              $rowEl.remove();
+              return len;
+            }
+            
+            if (mode === "F") {
+              $gridCanvas.append($rowEl);
+            }
+            $(data).each(function (index, row) {
+                if (columnDef.formatter) {
+                  formatterResult = columnDef.formatter(index, colIndex, row[columnDef.field], columnDef, row);
+                } else {
+                  formatterResult = '' + row[columnDef.field];
+                }
+                _grid.applyFormatResultToCellNode(formatterResult, $cellEl[0]);
+                len = $cellEl.width();
+                if (len > max) { max = len; }
+             });
+                       
+            $rowEl.remove();
+            return max;
+        }
+    
+        function getMaxColumnTextWidth(columnDef, $gridCanvas) {
+            var autosizeOptions = columnDef.AutoSize || {};
             var texts = [];
-            var rowEl = createRow(columnDef);
+            
+            // get data items
             var data = _grid.getData();
             if (Slick.Data && data instanceof Slick.Data.DataView) {
                 data = data.getItems();
             }
 
-            let length = data.length, result = [], seen = new Set();
+            // get unique values
+            let length = data.length, seen = new Set();
             outer:
             for (let index = 0; index < length; index++) {
               let value = data[index][columnDef.field];
               if (seen.has(value)) continue outer;
               seen.add(value);
-              result.push(value);
+              texts.push(value);
             }
 
-            var template = getMaxTextTemplate(result, columnDef, colIndex, data, rowEl);
-            var width = getTemplateWidth(rowEl, template);
-            deleteRow(rowEl);
-            return width;
-        }
-
-        function getTemplateWidth(rowEl, template) {
-            var cell = $(rowEl.find(".slick-cell"));
-            cell.append(template);
-            $(cell).find("*").css("position", "relative");
-            return cell.outerWidth() + 1;
-        }
-
-        function getMaxTextTemplate(texts, columnDef, colIndex, data, rowEl) {
-            var max = 0,
-                maxTemplate = null;
+            // create row template
+            var max = 0, template = null;
             var formatFun = columnDef.formatter;
 
-            context.font = rowEl.css("font-size") + " " + rowEl.css("font-family");
-            $(texts).each(function (index, text) {
-                var template;
-                if (formatFun) {
-                    template = $("<span>" + formatFun(index, colIndex, text, columnDef, data[index]) + "</span>");
-                    text = template.text() || text;
-                }
-
-                var length = text ? context.measureText(text).width : 0;
-                if (length > max) {
-                    max = length;
-                    maxTemplate = template || text;
-                }
-            });
-            return maxTemplate;
-        }
-
-        function createRow(columnDef) {
-            var rowEl = $('<div class="slick-row"><div class="slick-cell"></div></div>');
+            var rowEl = $('<div class="slick-row ui-widget-content"><div class="slick-cell"></div></div>');
             rowEl.find(".slick-cell").css({
                 "visibility": "hidden",
                 "text-overflow": "initial",
                 "white-space": "nowrap"
             });
-            var gridCanvas = $(_grid.getContainerNode()).find(".grid-canvas")[0];
-            $(gridCanvas).append(rowEl);
-            return rowEl;
-        }
+            $gridCanvas.append(rowEl);
+            
+            // get computed style
+            canvas_context.font = rowEl.css("font-size") + " " + rowEl.css("font-family");
+            $(texts).each(function (index, text) {
+                var templateOrText;
+                if (formatFun) {
+                    templateOrText = $("<span>" + formatFun(index, colIndex, text, columnDef, data[index]) + "</span>");
+                    text = templateOrText.text() || text;
+                }
 
-        function deleteRow(rowEl) {
+                var length = text ? canvas_context.measureText(text).width : 0;
+                if (length > max) {
+                    max = length;
+                    templateOrText = templateOrText || text;
+                }
+            });
+            
+            var width = getTemplateWidth(rowEl, templateOrText);
             $(rowEl).remove();
-        }
-
-        function getElementWidth(element) {
-            var width, clone = element.cloneNode(true);
-            clone.style.cssText = 'position: absolute; visibility: hidden;right: auto;text-overflow: initial;white-space: nowrap;';
-            element.parentNode.insertBefore(clone, element);
-            width = clone.offsetWidth;
-            clone.parentNode.removeChild(clone);
             return width;
         }
 
-        function getElementWidthUsingCanvas(element, text) {
-            context.font = element.css("font-size") + " " + element.css("font-family");
-            var metrics = context.measureText(text);
-            return metrics.width;
+        function getTemplateWidth(rowEl, templateOrText) {
+            var cell = $(rowEl.find(".slick-cell"));
+            cell.append(templateOrText);
+            $(cell).find("*").css("position", "relative");
+            return cell.outerWidth() + 1;
         }
 
+         
         return {
             "init": init,
             "destroy": destroy,
+            "pluginName": "SizeToContent",
 
+            "getOptions": getOptions,
+            "setOptions": setOptions,
             "resizeAllColumns": resizeAllColumns,
-            "reSizeColumnByName": reSizeColumnByName
+            "reSizeColumnByName": reSizeColumnByName,
+            "getColHeaderWidths": getColHeaderWidths,
+            "getColTextWidths": getColTextWidths
         };
     }
+    
+    $.extend(true, window, {
+        "Slick": {
+            "Plugins": {
+                "SizeToContent": SizeToContent
+            },
+            "ViewportMode" : ViewportMode,
+            "AutoWidthStrategy" : AutoWidthStrategy
+        }
+    });   
 }(jQuery));
