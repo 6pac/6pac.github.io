@@ -13,10 +13,13 @@
     // AutoColumnSize plugin options
     // -----------------------------
     //  option
-    //   .viewportMode: FitColsToViewport (Scroll, FitColsToViewport, FitViewportToCols)
+    //   .viewportMode: Legacy (Legacy, IgnoreViewport, FitColsToViewport, FitViewportToCols)
     //   .switchToScrollModeWidthPercent: undefined
     //   .minViewportWidthPx: undefined
     //   .maxViewportWidthPx: undefined
+    //
+    //  forceFitColumns
+    //  absoluteColumnMinWidth - internal setting calulated from cell border and padding
     //
     //  DETAILS
     //
@@ -31,7 +34,7 @@
     // ViewportModes
     // -------------
     // 
-    // Scroll:
+    // IgnoreViewport:
     //   - columns are sized independently of the viewport width. There will be empty space at the
     //     right of the viewport if the columns are smaller, and a horizontal scroll bar if they are larger.
     //   - SizeToRemaining is ignored, its presence will trigger a console message
@@ -40,7 +43,7 @@
     //   - columns sized are calculated using the column strategies
     //   - if addl space remains in the viewport and there are SizeToRemaining cols, just the  
     //     SizeToRemaining cols expand proportionally to fill viewport
-    //   - if the total columns width is wider than the viewport by switchToScrollModeWidthPercent, switch to Scroll mode
+    //   - if the total columns width is wider than the viewport by switchToScrollModeWidthPercent, switch to IgnoreViewport mode
     //   - otherwise (ie. no SizeToRemaining cols or viewport smaller than columns) all cols other 
     //     than 'Locked' scale in proportion to fill viewport
     //
@@ -60,10 +63,15 @@
     //   .autosizeMode: ContentIntelligent (Lock, Guide, Content, ContentIntelligent)
     //   .rowSelectionModeOnInit: undefined (FirstRow, LastRow)
     //   .rowSelectionMode: FirstNRows (FirstRow, FirstNRows, AllRows)
-    //   .valueFilterMode: none (None, DeDuplicate, GetGreatest, GetLongestText, CanvasTextSize, CompareFunction())
-    //   .sizeToRemaining: undefined
     //   .rowSelectionCount: 100
+    //   .valueFilterMode: None (None, DeDuplicate, GetGreatest, GetLongestText, CompareFunction())
+    //   .widthEvalMode: HTML (CanvasTextSize, HTML)
+    //   .sizeToRemaining: undefined
     //   
+    // columnDefaults.resizable
+    // columnDefaults.minWidth
+    // columnDefaults.maxWidth
+    //
     //  DETAILS
     //
     //  ignoreHeaderText
@@ -125,9 +133,9 @@
     //
     
     var ViewportMode = {
-        Scroll: 'SC',
-        FitColsToViewport: 'FV',
-        FitViewportToCols: 'FC'
+        IgnoreViewport: 'IGV',
+        FitColsToViewport: 'FCV',
+        FitViewportToCols: 'FVC'
     };
     if (Object.freeze) { Object.freeze(ViewportMode); }
     
