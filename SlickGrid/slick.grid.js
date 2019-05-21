@@ -1208,11 +1208,10 @@ if (typeof Slick === "undefined") {
         var $headerRowTarget = hasFrozenColumns() ? ((i <= options.frozenColumn) ? $headerRowL : $headerRowR) : $headerRowL;
 
         var header = $("<div class='ui-state-default slick-header-column' />")
-            .html("<span class='slick-column-name'>" + m.name + "</span>")
+            .html("<span class='slick-column-name'> " + m.name + "  </span>")
             .width(m.width - headerColumnWidthDiff)
             .attr("id", "" + uid + m.id)
             .attr("title", m.toolTip || "")
-            .attr("aria-colindex", i)
             .attr("role", "columnheader")
             .data("column", m)
             .addClass(m.headerCssClass || "")
@@ -2597,7 +2596,7 @@ if (typeof Slick === "undefined") {
         + "' style='top:"
         + (getRowTop(row) - frozenRowOffset )
         + "px'"
-        + "role='row' aria-rowindex=" + row + ">"
+        + "role='row' aria-rowindex=" + (parseInt(row)+1) + ">"
 
 
       stringArrayL.push(rowHtml);
@@ -2682,7 +2681,6 @@ if (typeof Slick === "undefined") {
       var addlCssClasses = trigger(self.onBeforeAppendCell, { row: row, cell: cell, value: value, dataContext: item }) || '';
       addlCssClasses += (formatterResult && formatterResult.addClasses ? (addlCssClasses ? ' ' : '') + formatterResult.addClasses : '');
       var toolTip = formatterResult && formatterResult.toolTip ? "title='" + formatterResult.toolTip + "'" : '';
-
       stringArray.push("<div role = 'gridcell' class='" + cellCss + (addlCssClasses ? ' ' + addlCssClasses : '') + "' " + toolTip + ">");
 
       // if there is a corresponding row (if not, this is the Add New row or this data hasn't been loaded yet)
