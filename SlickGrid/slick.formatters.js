@@ -56,7 +56,7 @@
   }
 
   function CheckboxFormatter(row, cell, value, columnDef, dataContext) {
-    return '<img class="slick-edit-preclick" src="../images/' + (value ? "CheckboxY" : "CheckboxN") + '.png">';
+    return '<img class="slick-edit-preclick" src="../images/' + (value ? "CheckboxY" : "CheckboxN") + '.png" alt=(value ? "[X]" = "[ ]")>';
   }
 
   function CheckmarkFormatter(row, cell, value, columnDef, dataContext) {
