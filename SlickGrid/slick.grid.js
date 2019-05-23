@@ -2681,7 +2681,7 @@ if (typeof Slick === "undefined") {
       var addlCssClasses = trigger(self.onBeforeAppendCell, { row: row, cell: cell, value: value, dataContext: item }) || '';
       addlCssClasses += (formatterResult && formatterResult.addClasses ? (addlCssClasses ? ' ' : '') + formatterResult.addClasses : '');
       var toolTip = formatterResult && formatterResult.toolTip ? "title='" + formatterResult.toolTip + "'" : '';
-      stringArray.push("<div role = 'gridcell' class='" + cellCss + (addlCssClasses ? ' ' + addlCssClasses : '') + "' " + toolTip + ">");
+      stringArray.push("<div role = 'gridcell' aria-labelledby='" + m.id + "' class='" + cellCss + (addlCssClasses ? ' ' + addlCssClasses : '') + "' " + toolTip + ">");
 
       // if there is a corresponding row (if not, this is the Add New row or this data hasn't been loaded yet)
       if (item) {
