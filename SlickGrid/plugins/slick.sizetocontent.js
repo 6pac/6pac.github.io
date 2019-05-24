@@ -64,7 +64,7 @@
     //   .rowSelectionModeOnInit: undefined (FirstRow, LastRow)
     //   .rowSelectionMode: FirstNRows (FirstRow, FirstNRows, AllRows)
     //   .rowSelectionCount: 100
-    //   .valueFilterMode: None (None, DeDuplicate, GetGreatest, GetLongestText, CompareFunction())
+    //   .valueFilterMode: None (None, DeDuplicate, GetGreatest, GetLongestText, CompareFunction(), FilterFunction())
     //   .widthEvalMode: HTML (CanvasTextSize, HTML)
     //   .sizeToRemaining: undefined
     //   

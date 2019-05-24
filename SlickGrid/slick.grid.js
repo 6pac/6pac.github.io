@@ -616,7 +616,7 @@ if (typeof Slick === "undefined") {
     }
 
     function getPluginByName(name) {
-      for (var i = plugins.length; i >= 0; i--) {
+      for (var i = plugins.length-1; i >= 0; i--) {
         if (plugins[i].pluginName === name) {
           return plugins[i];
         }
@@ -4112,7 +4112,7 @@ if (typeof Slick === "undefined") {
       for (var row in rowsCache) {
         for (var i in rowsCache[row].rowNode) {
           if (rowsCache[row].rowNode[i] === rowNode)
-          return row | 0;
+          return (row ? parseInt(row) : 0);
         }
       }
       return null;
@@ -5210,7 +5210,7 @@ if (typeof Slick === "undefined") {
     // Public API
 
     $.extend(this, {
-      "slickGridVersion": "2.4.7",
+      "slickGridVersion": "2.4.8",
 
       // Events
       "onScroll": new Slick.Event(),
