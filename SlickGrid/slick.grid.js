@@ -141,7 +141,6 @@ if (typeof Slick === "undefined") {
     var $container;
     var uid = "slickgrid_" + Math.round(1000000 * Math.random());
     var self = this;
-    var $focusSink, $focusSink2;
     var $groupHeaders = $();
     var $headerScroller;
     var $headers;
@@ -341,8 +340,6 @@ if (typeof Slick === "undefined") {
         $container.css("position", "relative");
       }
 
-      $focusSink = $("<div tabIndex='-1' hideFocus style='position:fixed;width:0;height:0;top:0;left:0;outline:0;'></div>").appendTo($container);
-
       // Containers used for scrolling frozen columns and rows
       $paneHeaderL = $("<div class='slick-pane slick-pane-header slick-pane-left' tabIndex='-1' />").appendTo($container);
       $paneHeaderR = $("<div class='slick-pane slick-pane-header slick-pane-right' tabIndex='-1' />").appendTo($container);
@@ -481,8 +478,6 @@ if (typeof Slick === "undefined") {
         }
       }
 
-      $focusSink2 = $focusSink.clone().appendTo($container);
-
       if (!options.explicitInitialization) {
         finishInitialization();
       }
@@ -561,9 +556,7 @@ if (typeof Slick === "undefined") {
               .on("scroll", handlePreHeaderPanelScroll);
         }
 
-        $focusSink.add($focusSink2)
-            .on("keydown", handleKeyDown);
-        $canvas
+       $canvas
             .on("keydown", handleKeyDown)
             .on("click", handleClick)
             .on("dblclick", handleDblClick)
@@ -4203,11 +4196,7 @@ if (typeof Slick === "undefined") {
     }
 
     function setFocus() {
-      if (tabbingDirection == -1) {
-        $focusSink[0].focus();
-      } else {
-        $focusSink2[0].focus();
-      }
+      document.activeElement.focus();
     }
 
     function scrollCellIntoView(row, cell, doPaging) {
@@ -4270,6 +4259,8 @@ if (typeof Slick === "undefined") {
         activeCell = activePosX = activeCell = activePosX = getCellFromNode(activeCellNode);
 
         $activeCellNode.addClass("active");
+        $activeCellNode.attr("tabindex", "0");
+        $activeCellNode.focus();
         console.log($activeCellNode[0].innerHTML);
         if (rowsCache[activeRow]) {
           $(rowsCache[activeRow].rowNode).addClass('active');
