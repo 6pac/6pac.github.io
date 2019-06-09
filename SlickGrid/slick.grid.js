@@ -2027,30 +2027,11 @@ if (typeof Slick === "undefined") {
       $container.empty().removeClass(uid);
     }
 
-
     //////////////////////////////////////////////////////////////////////////////////////////////
-    // General
-
-    function trigger(evt, args, e) {
-      e = e || new Slick.EventData();
-      args = args || {};
-      args.grid = self;
-      return evt.notify(args, e, self);
-    }
-
-    function getEditorLock() {
-      return options.editorLock;
-    }
-
-    function getEditController() {
-      return editController;
-    }
-
-    function getColumnIndex(id) {
-      return columnsById[id];
-    }
-
-    function autosizeColumns() {
+    // Column Autosizing
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    
+    function legacyAutosizeColumns() {
       var i, c,
           widths = [],
           shrinkLeeway = 0,
@@ -2131,6 +2112,30 @@ if (typeof Slick === "undefined") {
         invalidateAllRows();
         render();
       }
+    }
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    // General
+    //////////////////////////////////////////////////////////////////////////////////////////////
+
+    function trigger(evt, args, e) {
+      e = e || new Slick.EventData();
+      args = args || {};
+      args.grid = self;
+      return evt.notify(args, e, self);
+    }
+
+    function getEditorLock() {
+      return options.editorLock;
+    }
+
+    function getEditController() {
+      return editController;
+    }
+
+    function getColumnIndex(id) {
+      return columnsById[id];
     }
 
     function applyColumnGroupHeaderWidths() {
@@ -3024,7 +3029,7 @@ if (typeof Slick === "undefined") {
       }
 
       if (options.forceFitColumns) {
-        autosizeColumns();
+        legacyAutosizeColumns();
       }
 
       updateRowCount();
@@ -3125,7 +3130,7 @@ if (typeof Slick === "undefined") {
       }
 
       if (options.forceFitColumns && oldViewportHasVScroll != viewportHasVScroll) {
-        autosizeColumns();
+        legacyAutosizeColumns();
       }
       updateCanvasWidth(false);
     }
@@ -3321,20 +3326,19 @@ if (typeof Slick === "undefined") {
       x.innerHTML = stringArray.join("");
 
       var processedRow;
-      var $node;
+      var node;
       while ((processedRow = processedRows.pop()) != null) {
         cacheEntry = rowsCache[processedRow];
         var columnIdx;
         while ((columnIdx = cacheEntry.cellRenderQueue.pop()) != null) {
-          $node = $(x).children().last();
+          node = x.lastChild;
 
-          if (hasFrozenColumns() && ( columnIdx > options.frozenColumn )) {
-            $(cacheEntry.rowNode[1]).append($node);
+          if (hasFrozenColumns() && (columnIdx > options.frozenColumn)) {
+            cacheEntry.rowNode[1].appendChild(node);
           } else {
-            $(cacheEntry.rowNode[0]).append($node);
+            cacheEntry.rowNode[0].appendChild(node);
           }
-
-          cacheEntry.cellNodesByColumnIdx[columnIdx] = $node;
+          cacheEntry.cellNodesByColumnIdx[columnIdx] = $(node);
         }
       }
     }
@@ -3441,7 +3445,8 @@ if (typeof Slick === "undefined") {
 
     function updateRowPositions() {
       for (var row in rowsCache) {
-        rowsCache[row].rowNode.style.top = getRowTop(row) + "px";
+        var rowNumber = row ? parseInt(row) : 0;
+        rowsCache[rowNumber].rowNode[0].style.top = getRowTop(rowNumber) + "px";
       }
     }
 
@@ -4982,7 +4987,12 @@ if (typeof Slick === "undefined") {
       if (rowsCache[row]) {
         ensureCellNodesInRowsCache(row);
         try {
-          return rowsCache[row].cellNodesByColumnIdx[cell][0];
+          if (rowsCache[row].cellNodesByColumnIdx.length > cell) {
+            return rowsCache[row].cellNodesByColumnIdx[cell][0];
+          }
+          else {
+            return null;
+          }
         } catch (e) {
           return rowsCache[row].cellNodesByColumnIdx[cell];
         }
@@ -5210,7 +5220,7 @@ if (typeof Slick === "undefined") {
     // Public API
 
     $.extend(this, {
-      "slickGridVersion": "2.4.8",
+      "slickGridVersion": "2.4.9",
 
       // Events
       "onScroll": new Slick.Event(),
@@ -5263,7 +5273,7 @@ if (typeof Slick === "undefined") {
       "setSortColumn": setSortColumn,
       "setSortColumns": setSortColumns,
       "getSortColumns": getSortColumns,
-      "autosizeColumns": autosizeColumns,
+      "autosizeColumns": legacyAutosizeColumns,
       "getOptions": getOptions,
       "setOptions": setOptions,
       "getData": getData,
