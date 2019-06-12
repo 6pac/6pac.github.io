@@ -4196,7 +4196,8 @@ if (typeof Slick === "undefined") {
     }
 
     function setFocus() {
-      document.activeElement.focus();
+      // document.activeElement.focus();
+      setActiveCellInternal(getCellNode(activeRow, activeCell), false);
     }
 
     function scrollCellIntoView(row, cell, doPaging) {
@@ -4261,7 +4262,6 @@ if (typeof Slick === "undefined") {
         $activeCellNode.addClass("active");
         $activeCellNode.attr("tabindex", "0");
         $activeCellNode.focus();
-        console.log($activeCellNode[0].innerHTML);
         if (rowsCache[activeRow]) {
           $(rowsCache[activeRow].rowNode).addClass('active');
         }
@@ -4959,13 +4959,12 @@ if (typeof Slick === "undefined") {
           ) {
           scrollCellIntoView(pos.row, pos.cell, !isAddNewRow && options.emulatePagingWhenScrolling);
         }
-        // console.log("row " + pos.row + " col " + pos.cell);
         beep()
-        setActiveCellInternal(getCellNode(pos.row, pos.cell));
+        setActiveCellInternal(getCellNode(pos.row, pos.cell), false);
         activePosX = pos.posX;
         return true;
       } else {
-        setActiveCellInternal(getCellNode(activeRow, activeCell));
+        setActiveCellInternal(getCellNode(activeRow, activeCell), false);
         return false;
       }
     }
