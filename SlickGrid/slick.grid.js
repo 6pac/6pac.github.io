@@ -2230,6 +2230,7 @@ if (typeof Slick === "undefined") {
             .addClass("slick-header-column-sorted")
               .find(".slick-sort-indicator")
                 .addClass(col.sortAsc ? "slick-sort-indicator-asc" : "slick-sort-indicator-desc");
+                headerColumnEls.eq(columnIndex).attr("aria-sort", col.sortAsc ? "ascending" : "descending");
           if (numberCols) {
             headerColumnEls.eq(columnIndex)
               .find(".slick-sort-indicator-numbered")

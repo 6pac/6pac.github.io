@@ -47,8 +47,8 @@
     } else {
       color = "green";
     }
-
-    return "<span class='percent-complete-bar' style='background:" + color + ";width:" + value + "%'></span>";
+    // The text inside the span is needed to let the screen reader users reas the value. Maybe there's a better solution so that the text doesn't appear yet is spoken by the screen reader?
+    return "<span class='percent-complete-bar' style='background:" + color + ";width:" + value + "%'>" + value + "% </span>";
   }
 
   function YesNoFormatter(row, cell, value, columnDef, dataContext) {
