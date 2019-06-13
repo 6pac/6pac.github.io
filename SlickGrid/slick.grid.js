@@ -3897,9 +3897,15 @@ if (typeof Slick === "undefined") {
                }
             }
             if (e.which == keyCode.HOME) {
-               handled = (e.ctrlKey) ? navigateTop() : navigateRowStart();
+               if(e.ctrlKey) {
+                 handled = navigateTop()
+               }
+               navigateRowStart();
             } else if (e.which == keyCode.END) {
-               handled = (e.ctrlKey) ? navigateBottom() : navigateRowEnd();
+               if(e.ctrlKey) {
+                 handled = navigateBottom()
+               }
+               navigateRowEnd();
             }
          }
       }
