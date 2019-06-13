@@ -3960,6 +3960,20 @@ if (typeof Slick === "undefined") {
         }
       }
 
+      // enter editing when pressing F2 or an alphanumeric key on an editable cell as specified by the WAI.
+      var inp = String.fromCharCode(e.keyCode);
+      if (/[a-zA-Z0-9-_ ]/.test(inp)) {
+        if (options.editable) {
+          if (!currentEditor) {
+            if (getEditorLock().commitCurrentEdit()) {
+              makeActiveCellEditable(undefined, undefined, e);
+              handled = true;
+            }
+          }
+        }
+        
+      }
+
       if (handled) {
         // the event has been handled so don't let parent element (bubbling/propagation) or browser (default) handle it
         e.stopPropagation();
@@ -4965,7 +4979,6 @@ if (typeof Slick === "undefined") {
           ) {
           scrollCellIntoView(pos.row, pos.cell, !isAddNewRow && options.emulatePagingWhenScrolling);
         }
-        beep()
         setActiveCellInternal(getCellNode(pos.row, pos.cell), false);
         activePosX = pos.posX;
         return true;
