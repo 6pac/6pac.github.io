@@ -330,9 +330,9 @@ if (typeof Slick === "undefined") {
           .css("outline", 0)
           .addClass(uid)
           .addClass("ui-widget")
-		  .attr("role", "grid")
-		  .attr("aria-colcount", columns.length)
-		  .attr("aria-rowcount", data.length);
+          .attr("role", treeColumns.hasDepth() ? "treegrid" : "grid")
+          .attr("aria-colcount", columns.length)
+          .attr("aria-rowcount", data.length);
 		  
 
       // set up a positioning container if needed
@@ -1211,6 +1211,7 @@ if (typeof Slick === "undefined") {
             .attr("id", "" + uid + m.id)
             .attr("title", m.toolTip || "")
             .attr("role", "columnheader")
+            .attr("aria-colindex", i + 1)
             .data("column", m)
             .addClass(m.headerCssClass || "")
             .addClass(hasFrozenColumns() && i <= options.frozenColumn? 'frozen': '')
@@ -1238,7 +1239,7 @@ if (typeof Slick === "undefined") {
         });
 
         if (options.showHeaderRow) {
-          var headerRowCell = $("<div class='ui-state-default slick-headerrow-column l" + i + " r" + i + "'></div>")
+          var headerRowCell = $("<div class='ui-state-default slick-headerrow-column l" + i + " r" + i + "' role=row aria-rowindex=1></div>")
               .data("column", m)
               .addClass(hasFrozenColumns() && i <= options.frozenColumn? 'frozen': '')
               .appendTo($headerRowTarget);
@@ -2595,7 +2596,7 @@ if (typeof Slick === "undefined") {
         + "' style='top:"
         + (getRowTop(row) - frozenRowOffset )
         + "px'"
-        + "role='row' aria-rowindex=" + (parseInt(row)+1) + ">"
+        + "role='row' aria-rowindex=" + (parseInt(row)+1) + ">" // + 2 because index is one based and one for the headers
 
 
       stringArrayL.push(rowHtml);
