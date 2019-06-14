@@ -3760,8 +3760,7 @@ if (typeof Slick === "undefined") {
               node = getCellNode(row, getColumnIndex(columnId));
               if (node) {
                 $(node).addClass(addedRowHash[columnId]);
-if(addedRowHash[columnId] == options.selectedCellCssClass) {
-beep();
+                if(addedRowHash[columnId] == options.selectedCellCssClass) {
                   $(node).attr("aria-selected", true);
                 }
               }
