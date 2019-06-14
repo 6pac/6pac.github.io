@@ -56,7 +56,8 @@
   }
 
   function CheckboxFormatter(row, cell, value, columnDef, dataContext) {
-    return '<img class="slick-edit-preclick" src="../images/' + (value ? "CheckboxY" : "CheckboxN") + '.png" alt=(value ? "[X]" = "[ ]")>';
+    // Using [ ] as alt text for an unchecked box seems to result in rendering only the opening bracket in the screen reader so we use [-] instead.
+    return '<img class="slick-edit-preclick" src="../images/' + (value ? "CheckboxY" : "CheckboxN") + '.png" alt=' + (value ? "[X]" : "[-]") + '>';
   }
 
   function CheckmarkFormatter(row, cell, value, columnDef, dataContext) {
