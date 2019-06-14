@@ -3971,7 +3971,7 @@ beep();
 
       // enter editing when pressing F2 or an alphanumeric key on an editable cell as specified by the WAI.
       var inp = String.fromCharCode(e.keyCode);
-      if (/[a-zA-Z0-9-_ ]/.test(inp)) {
+      if (/[a-zA-Z0-9-_]/.test(inp)) {
         if (options.editable) {
           if (!currentEditor) {
             if (getEditorLock().commitCurrentEdit()) {
