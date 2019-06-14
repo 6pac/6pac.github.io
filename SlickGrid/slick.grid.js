@@ -3746,6 +3746,9 @@ if (typeof Slick === "undefined") {
               node = getCellNode(row, getColumnIndex(columnId));
               if (node) {
                 $(node).removeClass(removedRowHash[columnId]);
+                if(removedRowHash[columnId] == options.selectedCellCssClass) {
+                  $(node).attr("aria-selected", false);
+                }
               }
             }
           }
@@ -3757,6 +3760,10 @@ if (typeof Slick === "undefined") {
               node = getCellNode(row, getColumnIndex(columnId));
               if (node) {
                 $(node).addClass(addedRowHash[columnId]);
+if(addedRowHash[columnId] == options.selectedCellCssClass) {
+beep();
+                  $(node).attr("aria-selected", true);
+                }
               }
             }
           }
