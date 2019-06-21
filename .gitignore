@@ -1,3 +1,6 @@
-SlickGrid/.settings/
-SlickGrid/.project
-SlickGrid/.metadata/
+.gitk*
+.idea/*
+.DS_Store
+node_modules/*
+SlickgridRelease*
+nuget*
