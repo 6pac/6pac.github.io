@@ -1102,6 +1102,8 @@ if (typeof Slick === "undefined") {
             .html("<span class='slick-column-name'>" + m.name + "</span>")
             .attr("id", "" + uid + m.id)
             .attr("title", m.toolTip || "")
+            .attr("aria-colindex", i)
+            .attr("role", "columnheader")
             .data("column", m)
             .addClass(m.headerCssClass || "")
             .addClass(hasFrozenColumns() && (columnsLength - 1) > options.frozenColumn? 'frozen': '')
@@ -1218,6 +1220,7 @@ if (typeof Slick === "undefined") {
         }
 
         if (m.sortable) {
+          header.attr("aria-sort", "none");
           header.addClass("slick-header-sortable");
           header.append("<span class='slick-sort-indicator"
             + (options.numberedMultiColumnSort && !options.sortColNumberInSeparateSpan ? " slick-sort-indicator-numbered" : "" ) + "' />");
@@ -2578,6 +2581,7 @@ if (typeof Slick === "undefined") {
       }
 
       var frozenRowOffset = getFrozenRowOffset(row);
+
 
       var rowHtml = "<div class='ui-widget-content " + rowCss + "' style='top:"
         + (getRowTop(row) - frozenRowOffset )
