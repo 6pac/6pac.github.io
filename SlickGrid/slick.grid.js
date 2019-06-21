@@ -4203,7 +4203,6 @@ if (typeof Slick === "undefined") {
     }
 
     function setFocus() {
-      // document.activeElement.focus();
       setActiveCellInternal(getCellNode(activeRow, activeCell), false);
     }
 
