@@ -312,8 +312,18 @@ if (typeof Slick === "undefined") {
       treeColumns = new Slick.TreeColumns(columns);
       columns = treeColumns.extractColumns();
 
-      updateColumnProps();
-      
+      columnsById = {};
+      for (var i = 0; i < columns.length; i++) {
+        var m = columns[i] = $.extend({}, columnDefaults, columns[i]);
+        columnsById[m.id] = i;
+        if (m.minWidth && m.width < m.minWidth) {
+          m.width = m.minWidth;
+        }
+        if (m.maxWidth && m.width > m.maxWidth) {
+          m.width = m.maxWidth;
+        }
+      }
+
       // validate loaded JavaScript modules against requested options
       if (options.enableColumnReorder && !$.fn.sortable) {
         throw new Error("SlickGrid's 'enableColumnReorder = true' option requires jquery-ui.sortable module to be loaded");
@@ -333,8 +343,7 @@ if (typeof Slick === "undefined") {
           .attr("role", treeColumns.hasDepth() ? "treegrid" : "grid")
           .attr("aria-colcount", columns.length)
           .attr("aria-rowcount", data.length);
-		  
-
+  
       // set up a positioning container if needed
       if (!/relative|absolute|fixed/.test($container.css("position"))) {
         $container.css("position", "relative");
@@ -615,15 +624,6 @@ if (typeof Slick === "undefined") {
           break;
         }
       }
-    }
-
-    function getPluginByName(name) {
-      for (var i = plugins.length; i >= 0; i--) {
-        if (plugins[i].pluginName === name) {
-          return plugins[i];
-        }
-      }
-      return undefined;
     }
 
     function setSelectionModel(model) {
@@ -979,19 +979,13 @@ if (typeof Slick === "undefined") {
       }
     }
 
-    function getHeader(columnDef) {
-      if (!columnDef) {
-        return hasFrozenColumns() ? $headers : $headerL;
-      }
-      var idx = getColumnIndex(columnDef.id);
-      return hasFrozenColumns() ? ((idx <= options.frozenColumn) ? $headerL : $headerR) : $headerL;
+    function getHeader() {
+      return $headers[0];
     }
 
     function getHeaderColumn(columnIdOrIdx) {
       var idx = (typeof columnIdOrIdx === "number" ? columnIdOrIdx : getColumnIndex(columnIdOrIdx));
-      var targetHeader = hasFrozenColumns() ? ((idx <= options.frozenColumn) ? $headerL : $headerR) : $headerL;
-      var targetIndex = hasFrozenColumns() ? ((idx <= options.frozenColumn) ? idx : idx - options.frozenColumn - 1) : idx;
-      var $rtn = targetHeader.children().eq(targetIndex);
+      var $rtn = $headers.children().eq(idx);
       return $rtn && $rtn[0];
     }
 
@@ -1224,11 +1218,9 @@ if (typeof Slick === "undefined") {
         }
 
         if (m.sortable) {
-          header.attr("aria-sort", "none");
           header.addClass("slick-header-sortable");
           header.append("<span class='slick-sort-indicator"
             + (options.numberedMultiColumnSort && !options.sortColNumberInSeparateSpan ? " slick-sort-indicator-numbered" : "" ) + "' />");
-          
           if (options.numberedMultiColumnSort && options.sortColNumberInSeparateSpan) { header.append("<span class='slick-sort-indicator-numbered' />"); }
         }
 
@@ -2296,22 +2288,6 @@ if (typeof Slick === "undefined") {
       }
     }
 
-    function updateColumnProps() {
-      columnsById = {};
-      for (var i = 0; i < columns.length; i++) {
-        if (columns[i].width) { columns[i].widthRequest = columns[i].width; }
-        
-        var m = columns[i] = $.extend({}, columnDefaults, columns[i]);
-        columnsById[m.id] = i;
-        if (m.minWidth && m.width < m.minWidth) {
-          m.width = m.minWidth;
-        }
-        if (m.maxWidth && m.width > m.maxWidth) {
-          m.width = m.maxWidth;
-        }
-      }      
-    }
-    
     function setColumns(columnDefinitions) {
       var _treeColumns = new Slick.TreeColumns(columnDefinitions);
       if (_treeColumns.hasDepth()) {
@@ -2321,7 +2297,18 @@ if (typeof Slick === "undefined") {
         columns = columnDefinitions;
       }
 
-      updateColumnProps();
+      columnsById = {};
+      for (var i = 0; i < columns.length; i++) {
+        var m = columns[i] = $.extend({}, columnDefaults, columns[i]);
+        columnsById[m.id] = i;
+        if (m.minWidth && m.width < m.minWidth) {
+          m.width = m.minWidth;
+        }
+        if (m.maxWidth && m.width > m.maxWidth) {
+          m.width = m.maxWidth;
+        }
+      }
+
       updateColumnCaches();
 
       if (initialized) {
@@ -2592,12 +2579,10 @@ if (typeof Slick === "undefined") {
 
       var frozenRowOffset = getFrozenRowOffset(row);
 
-      var rowHtml = "<div class='ui-widget-content " + rowCss 
-        + "' style='top:"
+      var rowHtml = "<div class='ui-widget-content " + rowCss + "' style='top:"
         + (getRowTop(row) - frozenRowOffset )
         + "px'"
         + "role='row' aria-rowindex=" + (parseInt(row)+1) + ">" // + 2 because index is one based and one for the headers
-
 
       stringArrayL.push(rowHtml);
 
@@ -2682,7 +2667,6 @@ if (typeof Slick === "undefined") {
       addlCssClasses += (formatterResult && formatterResult.addClasses ? (addlCssClasses ? ' ' : '') + formatterResult.addClasses : '');
       var toolTip = formatterResult && formatterResult.toolTip ? "title='" + formatterResult.toolTip + "'" : '';
       stringArray.push("<div role='gridcell' aria-colindex='" + (parseInt(cell)+1) + "' class='" + cellCss + (addlCssClasses ? ' ' + addlCssClasses : '') + "' " + toolTip + ">");
-
       // if there is a corresponding row (if not, this is the Add New row or this data hasn't been loaded yet)
       if (item) {
         stringArray.push(Object.prototype.toString.call(formatterResult)  !== '[object Object]' ? formatterResult : formatterResult.text);
@@ -2883,14 +2867,10 @@ if (typeof Slick === "undefined") {
     }
 
     function getViewportHeight() {
-      var fullHeight = $paneHeaderL.outerHeight();
-      fullHeight += ( options.showHeaderRow ) ? options.headerRowHeight + getVBoxDelta($headerRowScroller) : 0;
-      fullHeight += ( options.showFooterRow ) ? options.footerRowHeight + getVBoxDelta($footerRowScroller) : 0;
-
       if (options.autoHeight) {
         viewportH = options.rowHeight
           * getDataLengthIncludingAddNew()
-          + ( ( options.frozenColumn == -1 ) ? fullHeight : 0 );
+          + ( ( options.frozenColumn == -1 ) ? $headers.outerHeight() : 0 );
       } else {
         topPanelH = ( options.showTopPanel ) ? options.topPanelHeight + getVBoxDelta($topPanelScroller) : 0;
         headerRowH = ( options.showHeaderRow ) ? options.headerRowHeight + getVBoxDelta($headerRowScroller) : 0;
@@ -5271,7 +5251,6 @@ if (typeof Slick === "undefined") {
       // Methods
       "registerPlugin": registerPlugin,
       "unregisterPlugin": unregisterPlugin,
-      "getPluginByName": getPluginByName,
       "getColumns": getColumns,
       "setColumns": setColumns,
       "getColumnIndex": getColumnIndex,
