@@ -16,7 +16,7 @@
       "Group": Group,
       "GroupTotals": GroupTotals,
       "EditorLock": EditorLock,
-
+  
       /***
        * A global singleton editor lock.
        * @class GlobalEditorLock
@@ -44,10 +44,51 @@
         UP: 38,
         A: 65
       },
-      "preClickClassName" : "slick-edit-preclick"
+      "preClickClassName" : "slick-edit-preclick",
+      
+      "GridAutosizeColsMode": {
+        None: 'NOA',
+        Legacy: 'LEG',
+        IgnoreViewport: 'IGV',
+        FitColsToViewport: 'FCV',
+        FitViewportToCols: 'FVC'
+      },
+      
+      "ColAutosizeMode": {
+          Locked: 'LCK',
+          Guide: 'GUI',
+          Content: 'CON',
+          ContentIntelligent: 'CTI'
+      },
+      
+      "RowSelectionMode": {
+          FirstRow: 'FS1',
+          FirstNRows: 'FSN',
+          AllRows: 'ALL',
+          LastRow: 'LS1'
+      },
+      
+      "ValueFilterMode": {
+          None: 'NONE',
+          DeDuplicate: 'DEDP',
+          GetGreatestAndSub: 'GR8T',
+          GetLongestTextAndSub: 'LNSB',
+          GetLongestText: 'LNSC'
+      },
+      
+      "WidthEvalMode": {
+          CanvasTextSize: 'CANV',
+          HTML: 'HTML'
+      }      
     }
   });
 
+
+  if (Object.freeze) { 
+    Object.freeze(Slick.ColAutosizeMode); 
+    Object.freeze(Slick.AutoWidthStrategy); 
+  }
+    
   /***
    * An event object for passing data to event handlers and letting them control propagation.
    * <p>This is pretty much identical to how W3C and jQuery implement events.</p>
