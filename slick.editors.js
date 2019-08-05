@@ -531,7 +531,7 @@
       var $container = $("body");
       var navOnLR = args.grid.getOptions().editorCellNavOnLRKeys;
 
-      $wrapper = $("<DIV role='dialog' aria-label='editor' style='z-index:10000;position:absolute;background:white;padding:5px;border:3px solid gray; -moz-border-radius:10px; border-radius:10px;'/>")
+      $wrapper = $("<DIV style='z-index:10000;position:absolute;background:white;padding:5px;border:3px solid gray; -moz-border-radius:10px; border-radius:10px;'/>")
           .appendTo($container);
 
       $input = $("<TEXTAREA hidefocus rows=5 style='background:white;width:250px;height:80px;border:0;outline:0'>")

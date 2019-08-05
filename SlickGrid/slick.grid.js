@@ -164,7 +164,6 @@ if (typeof Slick === "undefined") {
     var $container;
     var uid = "slickgrid_" + Math.round(1000000 * Math.random());
     var self = this;
-    var $focusSink, $focusSink2;
     var $groupHeaders = $();
     var $headerScroller;
     var $headers;
@@ -353,22 +352,23 @@ if (typeof Slick === "undefined") {
           .css("overflow", "hidden")
           .css("outline", 0)
           .addClass(uid)
-          .addClass("ui-widget");
-
+          .addClass("ui-widget")
+          .attr("role", treeColumns.hasDepth() ? "treegrid" : "grid")
+          .attr("aria-colcount", columns.length)
+          .attr("aria-rowcount", data.length);
+  
       // set up a positioning container if needed
       if (!/relative|absolute|fixed/.test($container.css("position"))) {
         $container.css("position", "relative");
       }
 
-      $focusSink = $("<div tabIndex='0' hideFocus style='position:fixed;width:0;height:0;top:0;left:0;outline:0;'></div>").appendTo($container);
-
       // Containers used for scrolling frozen columns and rows
-      $paneHeaderL = $("<div class='slick-pane slick-pane-header slick-pane-left' tabIndex='0' />").appendTo($container);
-      $paneHeaderR = $("<div class='slick-pane slick-pane-header slick-pane-right' tabIndex='0' />").appendTo($container);
-      $paneTopL = $("<div class='slick-pane slick-pane-top slick-pane-left' tabIndex='0' />").appendTo($container);
-      $paneTopR = $("<div class='slick-pane slick-pane-top slick-pane-right' tabIndex='0' />").appendTo($container);
-      $paneBottomL = $("<div class='slick-pane slick-pane-bottom slick-pane-left' tabIndex='0' />").appendTo($container);
-      $paneBottomR = $("<div class='slick-pane slick-pane-bottom slick-pane-right' tabIndex='0' />").appendTo($container);
+      $paneHeaderL = $("<div class='slick-pane slick-pane-header slick-pane-left' tabIndex='-1' />").appendTo($container);
+      $paneHeaderR = $("<div class='slick-pane slick-pane-header slick-pane-right' tabIndex='-1' />").appendTo($container);
+      $paneTopL = $("<div class='slick-pane slick-pane-top slick-pane-left' tabIndex='-1' />").appendTo($container);
+      $paneTopR = $("<div class='slick-pane slick-pane-top slick-pane-right' tabIndex='-1' />").appendTo($container);
+      $paneBottomL = $("<div class='slick-pane slick-pane-bottom slick-pane-left' tabIndex='-1' />").appendTo($container);
+      $paneBottomR = $("<div class='slick-pane slick-pane-bottom slick-pane-right' tabIndex='-1' />").appendTo($container);
 
       if (options.createPreHeaderPanel) {
         $preHeaderPanelScroller = $("<div class='slick-preheader-panel ui-state-default' style='overflow:hidden;position:relative;' />").appendTo($paneHeaderL);
@@ -446,10 +446,10 @@ if (typeof Slick === "undefined") {
       }
 
       // Append the viewport containers
-      $viewportTopL = $("<div class='slick-viewport slick-viewport-top slick-viewport-left' tabIndex='0' hideFocus />").appendTo($paneTopL);
-      $viewportTopR = $("<div class='slick-viewport slick-viewport-top slick-viewport-right' tabIndex='0' hideFocus />").appendTo($paneTopR);
-      $viewportBottomL = $("<div class='slick-viewport slick-viewport-bottom slick-viewport-left' tabIndex='0' hideFocus />").appendTo($paneBottomL);
-      $viewportBottomR = $("<div class='slick-viewport slick-viewport-bottom slick-viewport-right' tabIndex='0' hideFocus />").appendTo($paneBottomR);
+      $viewportTopL = $("<div class='slick-viewport slick-viewport-top slick-viewport-left' tabIndex='-1' hideFocus />").appendTo($paneTopL);
+      $viewportTopR = $("<div class='slick-viewport slick-viewport-top slick-viewport-right' tabIndex=-1' hideFocus />").appendTo($paneTopR);
+      $viewportBottomL = $("<div class='slick-viewport slick-viewport-bottom slick-viewport-left' tabIndex='-1' hideFocus />").appendTo($paneBottomL);
+      $viewportBottomR = $("<div class='slick-viewport slick-viewport-bottom slick-viewport-right' tabIndex='-1' hideFocus />").appendTo($paneBottomR);
 
       // Cache the viewports
       $viewport = $().add($viewportTopL).add($viewportTopR).add($viewportBottomL).add($viewportBottomR);
@@ -459,10 +459,10 @@ if (typeof Slick === "undefined") {
       $activeViewportNode = $viewportTopL;
 
       // Append the canvas containers
-      $canvasTopL = $("<div class='grid-canvas grid-canvas-top grid-canvas-left' tabIndex='0' hideFocus />").appendTo($viewportTopL);
-      $canvasTopR = $("<div class='grid-canvas grid-canvas-top grid-canvas-right' tabIndex='0' hideFocus />").appendTo($viewportTopR);
-      $canvasBottomL = $("<div class='grid-canvas grid-canvas-bottom grid-canvas-left' tabIndex='0' hideFocus />").appendTo($viewportBottomL);
-      $canvasBottomR = $("<div class='grid-canvas grid-canvas-bottom grid-canvas-right' tabIndex='0' hideFocus />").appendTo($viewportBottomR);
+      $canvasTopL = $("<div class='grid-canvas grid-canvas-top grid-canvas-left' tabIndex='-1' hideFocus />").appendTo($viewportTopL);
+      $canvasTopR = $("<div class='grid-canvas grid-canvas-top grid-canvas-right' tabIndex='-1' hideFocus />").appendTo($viewportTopR);
+      $canvasBottomL = $("<div class='grid-canvas grid-canvas-bottom grid-canvas-left' tabIndex='-1' hideFocus />").appendTo($viewportBottomL);
+      $canvasBottomR = $("<div class='grid-canvas grid-canvas-bottom grid-canvas-right' tabIndex='-1' hideFocus />").appendTo($viewportBottomR);
       if (options.viewportClass) $viewport.toggleClass(options.viewportClass, true);
 
       // Cache the canvases
@@ -503,8 +503,6 @@ if (typeof Slick === "undefined") {
           $footerRowScroller.hide();
         }
       }
-
-      $focusSink2 = $focusSink.clone().appendTo($container);
 
       if (!options.explicitInitialization) {
         finishInitialization();
@@ -579,9 +577,7 @@ if (typeof Slick === "undefined") {
               .on("scroll", handlePreHeaderPanelScroll);
         }
 
-        $focusSink.add($focusSink2)
-            .on("keydown", handleKeyDown);
-        $canvas
+       $canvas
             .on("keydown", handleKeyDown)
             .on("click", handleClick)
             .on("dblclick", handleDblClick)
@@ -1141,6 +1137,8 @@ if (typeof Slick === "undefined") {
             .html("<span class='slick-column-name'>" + m.name + "</span>")
             .attr("id", "" + uid + m.id)
             .attr("title", m.toolTip || "")
+            .attr("aria-colindex", i)
+            .attr("role", "columnheader")
             .data("column", m)
             .addClass(m.headerCssClass || "")
             .addClass(hasFrozenColumns() && (columnsLength - 1) > options.frozenColumn? 'frozen': '')
@@ -1239,10 +1237,12 @@ if (typeof Slick === "undefined") {
         var $headerRowTarget = hasFrozenColumns() ? ((i <= options.frozenColumn) ? $headerRowL : $headerRowR) : $headerRowL;
 
         var header = $("<div class='ui-state-default slick-header-column' />")
-            .html("<span class='slick-column-name'>" + m.name + "</span>")
+            .html("<span class='slick-column-name'> " + m.name + "  </span>")
             .width(m.width - headerColumnWidthDiff)
             .attr("id", "" + uid + m.id)
             .attr("title", m.toolTip || "")
+            .attr("role", "columnheader")
+            .attr("aria-colindex", i + 1)
             .data("column", m)
             .addClass(m.headerCssClass || "")
             .addClass(hasFrozenColumns() && i <= options.frozenColumn? 'frozen': '')
@@ -1255,6 +1255,7 @@ if (typeof Slick === "undefined") {
         }
 
         if (m.sortable) {
+          header.attr("aria-sort", "none");
           header.addClass("slick-header-sortable");
           header.append("<span class='slick-sort-indicator"
             + (options.numberedMultiColumnSort && !options.sortColNumberInSeparateSpan ? " slick-sort-indicator-numbered" : "" ) + "' />");
@@ -1268,7 +1269,7 @@ if (typeof Slick === "undefined") {
         });
 
         if (options.showHeaderRow) {
-          var headerRowCell = $("<div class='ui-state-default slick-headerrow-column l" + i + " r" + i + "'></div>")
+          var headerRowCell = $("<div class='ui-state-default slick-headerrow-column l" + i + " r" + i + "' role=row aria-rowindex=1></div>")
               .data("column", m)
               .addClass(hasFrozenColumns() && i <= options.frozenColumn? 'frozen': '')
               .appendTo($headerRowTarget);
@@ -2639,6 +2640,7 @@ if (typeof Slick === "undefined") {
             .addClass("slick-header-column-sorted")
               .find(".slick-sort-indicator")
                 .addClass(col.sortAsc ? "slick-sort-indicator-asc" : "slick-sort-indicator-desc");
+                headerColumnEls.eq(columnIndex).attr("aria-sort", col.sortAsc ? "ascending" : "descending");
           if (numberCols) {
             headerColumnEls.eq(columnIndex)
               .find(".slick-sort-indicator-numbered")
@@ -3033,9 +3035,11 @@ if (typeof Slick === "undefined") {
 
       var frozenRowOffset = getFrozenRowOffset(row);
 
+
       var rowHtml = "<div class='ui-widget-content " + rowCss + "' style='top:"
         + (getRowTop(row) - frozenRowOffset )
-        + "px'>";
+        + "px'"
+        + "role='row' aria-rowindex=" + (parseInt(row)+1) + ">" // + 2 because index is one based and one for the headers
 
       stringArrayL.push(rowHtml);
 
@@ -3119,9 +3123,7 @@ if (typeof Slick === "undefined") {
       var addlCssClasses = trigger(self.onBeforeAppendCell, { row: row, cell: cell, value: value, dataContext: item }) || '';
       addlCssClasses += (formatterResult && formatterResult.addClasses ? (addlCssClasses ? ' ' : '') + formatterResult.addClasses : '');
       var toolTip = formatterResult && formatterResult.toolTip ? "title='" + formatterResult.toolTip + "'" : '';
-
-      stringArray.push("<div class='" + cellCss + (addlCssClasses ? ' ' + addlCssClasses : '') + "' " + toolTip + ">");
-
+      stringArray.push("<div role='gridcell' aria-colindex='" + (parseInt(cell)+1) + "' class='" + cellCss + (addlCssClasses ? ' ' + addlCssClasses : '') + "' " + toolTip + ">");
       // if there is a corresponding row (if not, this is the Add New row or this data hasn't been loaded yet)
       if (item) {
         stringArray.push(Object.prototype.toString.call(formatterResult)  !== '[object Object]' ? formatterResult : formatterResult.text);
@@ -4194,6 +4196,9 @@ if (typeof Slick === "undefined") {
               node = getCellNode(row, getColumnIndex(columnId));
               if (node) {
                 $(node).removeClass(removedRowHash[columnId]);
+                if(removedRowHash[columnId] == options.selectedCellCssClass) {
+                  $(node).attr("aria-selected", false);
+                }
               }
             }
           }
@@ -4205,6 +4210,9 @@ if (typeof Slick === "undefined") {
               node = getCellNode(row, getColumnIndex(columnId));
               if (node) {
                 $(node).addClass(addedRowHash[columnId]);
+                if(addedRowHash[columnId] == options.selectedCellCssClass) {
+                  $(node).attr("aria-selected", true);
+                }
               }
             }
           }
@@ -4347,9 +4355,15 @@ if (typeof Slick === "undefined") {
                }
             }
             if (e.which == keyCode.HOME) {
-               handled = (e.ctrlKey) ? navigateTop() : navigateRowStart();
+               if(e.ctrlKey) {
+                 handled = navigateTop()
+               }
+               navigateRowStart();
             } else if (e.which == keyCode.END) {
-               handled = (e.ctrlKey) ? navigateBottom() : navigateRowEnd();
+               if(e.ctrlKey) {
+                 handled = navigateBottom()
+               }
+               navigateRowEnd();
             }
          }
       }
@@ -4404,6 +4418,20 @@ if (typeof Slick === "undefined") {
         }
       }
 
+      // enter editing when pressing F2 or an alphanumeric key on an editable cell as specified by the WAI.
+      var inp = String.fromCharCode(e.keyCode);
+      if (/[a-zA-Z0-9-_]/.test(inp)) {
+        if (options.editable) {
+          if (!currentEditor) {
+            if (getEditorLock().commitCurrentEdit()) {
+              makeActiveCellEditable(undefined, undefined, e);
+              handled = true;
+            }
+          }
+        }
+        
+      }
+
       if (handled) {
         // the event has been handled so don't let parent element (bubbling/propagation) or browser (default) handle it
         e.stopPropagation();
@@ -4422,7 +4450,7 @@ if (typeof Slick === "undefined") {
       if (!currentEditor) {
         // if this click resulted in some cell child node getting focus,
         // don't steal it back - keyboard events will still bubble up
-        // IE9+ seems to default DIVs to tabIndex=0 instead of -1, so check for cell clicks directly.
+        // IE9+ seems to default DIVs to s=0 instead of -1, so check for cell clicks directly.
         if (e.target != document.activeElement || $(e.target).hasClass("slick-cell")) {
           setFocus();
         }
@@ -4646,11 +4674,7 @@ if (typeof Slick === "undefined") {
     }
 
     function setFocus() {
-      if (tabbingDirection == -1) {
-        $focusSink[0].focus();
-      } else {
-        $focusSink2[0].focus();
-      }
+      setActiveCellInternal(getCellNode(activeRow, activeCell), false);
     }
 
     function scrollCellIntoView(row, cell, doPaging) {
@@ -4713,6 +4737,8 @@ if (typeof Slick === "undefined") {
         activeCell = activePosX = activeCell = activePosX = getCellFromNode(activeCellNode);
 
         $activeCellNode.addClass("active");
+        $activeCellNode.attr("tabindex", "0");
+        $activeCellNode.focus();
         if (rowsCache[activeRow]) {
           $(rowsCache[activeRow].rowNode).addClass('active');
         }
@@ -5411,11 +5437,11 @@ if (typeof Slick === "undefined") {
           ) {
           scrollCellIntoView(pos.row, pos.cell, !isAddNewRow && options.emulatePagingWhenScrolling);
         }
-        setActiveCellInternal(getCellNode(pos.row, pos.cell));
+        setActiveCellInternal(getCellNode(pos.row, pos.cell), false);
         activePosX = pos.posX;
         return true;
       } else {
-        setActiveCellInternal(getCellNode(activeRow, activeCell));
+        setActiveCellInternal(getCellNode(activeRow, activeCell), false);
         return false;
       }
     }

@@ -47,8 +47,8 @@
     } else {
       color = "green";
     }
-    // The text inside the span is needed to let the screen reader users read the value. Maybe there's a better solution so that the text doesn't appear yet is spoken by the screen reader?
-    return "<span class='percent-complete-bar' style='background:" + color + ";width:" + value + "%'>" + value + "% </span>";
+
+    return "<span class='percent-complete-bar' style='background:" + color + ";width:" + value + "%'></span>";
   }
 
   function YesNoFormatter(row, cell, value, columnDef, dataContext) {
@@ -56,11 +56,10 @@
   }
 
   function CheckboxFormatter(row, cell, value, columnDef, dataContext) {
-    // Using [ ] as alt text for an unchecked box seems to result in rendering only the opening bracket in the screen reader so we use [-] instead.
-    return '<img class="slick-edit-preclick" src="../images/' + (value ? "CheckboxY" : "CheckboxN") + '.png" alt=' + (value ? "[X]" : "[-]") + '>';
+    return '<img class="slick-edit-preclick" src="../images/' + (value ? "CheckboxY" : "CheckboxN") + '.png">';
   }
 
   function CheckmarkFormatter(row, cell, value, columnDef, dataContext) {
-    return value ? "<img src='../images/tick.png' alt='[X]'>" : "";
+    return value ? "<img src='../images/tick.png'>" : "";
   }
 })(jQuery);
