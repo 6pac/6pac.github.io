@@ -254,10 +254,10 @@
       // notify of the onBeforeMenuShow only works when it's a jQuery event (as per slick.core code)
       // this mean that we cannot notify when the grid menu is attach to a button event
       if (typeof e.isPropagationStopped === "function") {
-        if (_self.onBeforeMenuShow.notify({
+        if (!_self.onBeforeMenuShow.notify({
           "grid": _grid,
           "menu": $menu
-        }, e, _self) == false) {
+        }, e, _self)) {
           return;
         }
       }
@@ -359,10 +359,10 @@
         $menu.hide(_options.fadeSpeed);
         _isMenuOpen = false;
 
-        if (_self.onMenuClose.notify({
+        if (!_self.onMenuClose.notify({
           "grid": _grid,
           "menu": $menu
-        }, e, _self) == false) {
+        }, e, _self)) {
           return;
         }
       }

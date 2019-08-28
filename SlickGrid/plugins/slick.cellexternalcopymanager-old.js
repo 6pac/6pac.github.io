@@ -136,14 +136,14 @@
       var clipText = ta.value;
       var clipRows = clipText.split(/[\n\f\r]/);
       // trim trailing CR if present
-      if (clipRows[clipRows.length - 1]=="") { clipRows.pop(); }
+      if (clipRows[clipRows.length - 1]==="") { clipRows.pop(); }
       
       var clippedRange = [];
       var j = 0;
       
       _bodyElement.removeChild(ta);
       for (var i=0; i<clipRows.length; i++) {
-        if (clipRows[i]!="")
+        if (clipRows[i]!=="")
           clippedRange[j++] = clipRows[i].split("\t");
           else
           clippedRange[i] = [""];
@@ -251,7 +251,7 @@
             'fromRow': activeRow,
             'toCell': activeCell+this.w-1,
             'toRow': activeRow+this.h-1
-          }
+          };
 
           this.markCopySelection([bRange]);
           _grid.getSelectionModel().setSelectedRanges([bRange]);
@@ -287,7 +287,7 @@
             'fromRow': activeRow,
             'toCell': activeCell+this.w-1,
             'toRow': activeRow+this.h-1
-          }
+          };
 
           this.markCopySelection([bRange]);
           _grid.getSelectionModel().setSelectedRanges([bRange]);
@@ -329,7 +329,7 @@
             _onCopyInit.call();
           }
           ranges = _grid.getSelectionModel().getSelectedRanges();
-          if (ranges.length != 0) {
+          if (ranges.length !== 0) {
             _copiedRanges = ranges;
             markCopySelection(ranges);
             _self.onCopyCells.notify({ranges: ranges});
@@ -344,7 +344,7 @@
                     var clipTextCells = [];
                     var dt = _grid.getDataItem(i);
                     
-                    if (clipTextRows == "" && _options.includeHeaderWhenCopying) {
+                    if (clipTextRows === "" && _options.includeHeaderWhenCopying) {
                         var clipTextHeaders = [];
                         for (var j = range.fromCell; j < range.toCell + 1 ; j++) {
                             if (columns[j].name.length > 0)
