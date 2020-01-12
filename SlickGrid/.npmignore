@@ -1,0 +1,9 @@
+.DS_Store
+examples
+.gitk*
+.idea/*
+nuget*
+cypress/*
+SlickgridRelease*
+tests
+testresult.xml
