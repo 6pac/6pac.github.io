@@ -5675,7 +5675,7 @@ if (typeof Slick === "undefined") {
       if (!selectionModel) {
         throw new Error("Selection model is not set");
       }
-      return selectedRows;
+      return selectedRows.slice(0);
     }
 
     function setSelectedRows(rows) {
@@ -5716,7 +5716,7 @@ if (typeof Slick === "undefined") {
     // Public API
 
     $.extend(this, {
-      "slickGridVersion": "2.4.20",
+      "slickGridVersion": "2.4.21",
 
       // Events
       "onScroll": new Slick.Event(),
