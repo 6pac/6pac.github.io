@@ -730,7 +730,7 @@ if (typeof Slick === "undefined") {
     }
 
     function measureScrollbar() {
-      var $outerdiv = $('<div class="' + $viewport.className + '" style="position:absolute; top:-10000px; left:-10000px; overflow:auto; width:100px; height:100px;"></div>').appendTo($viewport);
+      var $outerdiv = $('<div class="' + $viewport.className + '" style="position:absolute; top:-10000px; left:-10000px; overflow:auto; width:100px; height:100px;"></div>').appendTo('body');
       var $innerdiv = $('<div style="width:200px; height:200px; overflow:auto;"></div>').appendTo($outerdiv);
       var dim = {
         width: $outerdiv[0].offsetWidth - $outerdiv[0].clientWidth,
@@ -4028,6 +4028,11 @@ if (typeof Slick === "undefined") {
       var maxScrollDistanceY = $viewportScrollContainerY[0].scrollHeight - $viewportScrollContainerY[0].clientHeight;
       var maxScrollDistanceX = $viewportScrollContainerY[0].scrollWidth - $viewportScrollContainerY[0].clientWidth;
 
+      // Protect against erroneous clientHeight/Width greater than scrollHeight/Width.
+      // Sometimes seen in Chrome.
+      maxScrollDistanceY = Math.max(0, maxScrollDistanceY);
+      maxScrollDistanceX = Math.max(0, maxScrollDistanceX);
+
       // Ceiling the max scroll values
       if (scrollTop > maxScrollDistanceY) {
         scrollTop = maxScrollDistanceY;
@@ -5711,7 +5716,7 @@ if (typeof Slick === "undefined") {
     // Public API
 
     $.extend(this, {
-      "slickGridVersion": "2.4.19",
+      "slickGridVersion": "2.4.20",
 
       // Events
       "onScroll": new Slick.Event(),
