@@ -18,8 +18,10 @@
  *      iconImage: "../images/drag-handle.png",     // this is the Grid Menu icon (hamburger icon)
  *      iconCssClass: "fa fa-bars",                 // you can provide iconImage OR iconCssClass
  *      leaveOpen: false,                           // do we want to leave the Grid Menu open after a command execution? (false by default)
- *      menuWidth: 18,                              // width that will be use to resize the column header container (18 by default)
+ *      menuWidth: 18,                              // width (icon) that will be use to resize the column header container (18 by default)
+ *      contentMinWidth: 0,							            // defaults to 0 (auto), minimum width of grid menu content (command, column list) 
  *      resizeOnShowHeaderRow: false,               // false by default
+ *      useClickToRepositionMenu: true,             // true by default
  *
  *      // the last 2 checkboxes titles
  *      hideForceFitButton: false,                  // show/hide checkbox near the end "Force Fit Columns"
@@ -43,9 +45,11 @@
  *     hideForceFitButton:        Hide the "Force fit columns" button (defaults to false)
  *     hideSyncResizeButton:      Hide the "Synchronous resize" button (defaults to false)
  *     forceFitTitle:             Text of the title "Force fit columns"
+ *     contentMinWidth:						minimum width of grid menu content (command, column list), defaults to 0 (auto)
  *     menuWidth:                 Grid menu button width (defaults to 18)
  *     resizeOnShowHeaderRow:     Do we want to resize on the show header row event
  *     syncResizeTitle:           Text of the title "Synchronous resize"
+ *     useClickToRepositionMenu:  Use the Click offset to reposition the Grid Menu (defaults to true), when set to False it will use the icon offset to reposition the grid menu
  *     menuUsabilityOverride:     Callback method that user can override the default behavior of enabling/disabling the menu from being usable (must be combined with a custom formatter)
  *
  * Available custom menu item options:
@@ -134,8 +138,13 @@
       hideSyncResizeButton: false,
       forceFitTitle: "Force fit columns",
       menuWidth: 18,
+      contentMinWidth: 0,
       resizeOnShowHeaderRow: false,
-      syncResizeTitle: "Synchronous resize"
+      syncResizeTitle: "Synchronous resize",
+      useClickToRepositionMenu: true,
+      headerColumnValueExtractor: function (columnDef) {
+        return columnDef.name;
+      }
     };
 
     function init(grid) {
@@ -323,7 +332,7 @@
       };
 
       // run the override function (when defined), if the result is false it won't go further
-      if (!runOverrideFunctionWhenExists(_options.gridMenu.menuUsabilityOverride, callbackArgs)) {
+      if (_options && _options.gridMenu && !runOverrideFunctionWhenExists(_options.gridMenu.menuUsabilityOverride, callbackArgs)) {
         return;
       }
 
@@ -335,21 +344,28 @@
         }
       }
 
-      var $li, $input, columnId, excludeCssClass;
+      var $li, $input, columnId, columnLabel, excludeCssClass;
       for (var i = 0; i < columns.length; i++) {
         columnId = columns[i].id;
         excludeCssClass = columns[i].excludeFromGridMenu ? "hidden" : "";
         $li = $('<li class="' + excludeCssClass + '" />').appendTo($list);
 
-        $input = $("<input type='checkbox' id='gridmenu-colpicker-" + columnId + "' />").data("column-id", columns[i].id).appendTo($li);
+        $input = $("<input type='checkbox' id='" + _gridUid + "-gridmenu-colpicker-" + columnId + "' />").data("column-id", columns[i].id).appendTo($li);
         columnCheckboxes.push($input);
 
         if (_grid.getColumnIndex(columns[i].id) != null) {
           $input.attr("checked", "checked");
         }
 
-        $("<label for='gridmenu-colpicker-" + columnId + "' />")
-          .html(columns[i].name)
+        // get the column label from the picker value extractor (user can optionally provide a custom extractor)
+        if (_options && _options.gridMenu && _options.gridMenu.headerColumnValueExtractor) {
+          columnLabel = _options.gridMenu.headerColumnValueExtractor(columns[i]);
+        } else {
+          columnLabel = _defaults.headerColumnValueExtractor(columns[i]);
+        }
+
+        $("<label for='" + _gridUid + "-gridmenu-colpicker-" + columnId + "' />")
+          .html(columnLabel)
           .appendTo($li);
       }
 
@@ -360,8 +376,8 @@
       if (!(_options.gridMenu && _options.gridMenu.hideForceFitButton)) {
         var forceFitTitle = (_options.gridMenu && _options.gridMenu.forceFitTitle) || _defaults.forceFitTitle;
         $li = $("<li />").appendTo($list);
-        $input = $("<input type='checkbox' id='gridmenu-colpicker-forcefit' />").data("option", "autoresize").appendTo($li);
-        $("<label for='gridmenu-colpicker-forcefit' />").text(forceFitTitle).appendTo($li);
+        $input = $("<input type='checkbox' id='" + _gridUid + "-gridmenu-colpicker-forcefit' />").data("option", "autoresize").appendTo($li);
+        $("<label for='" + _gridUid + "-gridmenu-colpicker-forcefit' />").text(forceFitTitle).appendTo($li);
 
         if (_grid.getOptions().forceFitColumns) {
           $input.attr("checked", "checked");
@@ -371,20 +387,36 @@
       if (!(_options.gridMenu && _options.gridMenu.hideSyncResizeButton)) {
         var syncResizeTitle = (_options.gridMenu && _options.gridMenu.syncResizeTitle) || _defaults.syncResizeTitle;
         $li = $("<li />").appendTo($list);
-        $input = $("<input type='checkbox' id='gridmenu-colpicker-syncresize' />").data("option", "syncresize").appendTo($li);
-        $("<label for='gridmenu-colpicker-syncresize' />").text(syncResizeTitle).appendTo($li);
+        $input = $("<input type='checkbox' id='" + _gridUid + "-gridmenu-colpicker-syncresize' />").data("option", "syncresize").appendTo($li);
+        $("<label for='" + _gridUid + "-gridmenu-colpicker-syncresize' />").text(syncResizeTitle).appendTo($li);
 
         if (_grid.getOptions().syncColumnCellResize) {
           $input.attr("checked", "checked");
         }
       }
 
-      $menu
-        .css("top", e.pageY + 10)
-        .css("left", e.pageX - $menu.width())
-        .css("max-height", $(window).height() - e.pageY - 10)
-        .show();
+      var menuIconOffset = $(e.target).prop('nodeName') == "button" ? $(e.target).offset() : $(e.target).parent("button").offset(); // get button offset position
+      if (!menuIconOffset) {
+        menuIconOffset = $(e.target).offset(); // external grid menu might fall in this last case
+      }
+      var menuWidth = $menu.width();
+      var useClickToRepositionMenu = (_options.gridMenu && _options.gridMenu.useClickToRepositionMenu !== undefined) ? _options.gridMenu.useClickToRepositionMenu : _defaults.useClickToRepositionMenu;
+      var gridMenuIconWidth = (_options.gridMenu && _options.gridMenu.menuWidth) || _defaults.menuWidth;
+      var contentMinWidth = (_options.gridMenu && _options.gridMenu.contentMinWidth) ? _options.gridMenu.contentMinWidth : _defaults.contentMinWidth;
+      var currentMenuWidth = (contentMinWidth > menuWidth) ? contentMinWidth : (menuWidth + gridMenuIconWidth);
+      var nextPositionTop = (useClickToRepositionMenu && e.pageY > 0) ? e.pageY : menuIconOffset.top + 10;
+      var nextPositionLeft = (useClickToRepositionMenu && e.pageX > 0) ? e.pageX : menuIconOffset.left + 10;
 
+      $menu
+        .css("top", nextPositionTop + 10)
+        .css("left", nextPositionLeft - currentMenuWidth + 10)
+        .css("max-height", $(window).height() - e.pageY - 15);
+
+      if (contentMinWidth > 0) {
+        $menu.css("min-width", contentMinWidth);
+      }
+
+      $menu.show();
       $list.appendTo($menu);
       _isMenuOpen = true;
 
@@ -487,12 +519,12 @@
 
     function updateColumn(e) {
       if ($(e.target).data("option") == "autoresize") {
-        if (e.target.checked) {
-          _grid.setOptions({ forceFitColumns: true });
-          _grid.autosizeColumns();
-        } else {
-          _grid.setOptions({ forceFitColumns: false });
-        }
+        // when calling setOptions, it will resize with ALL Columns (even the hidden ones)
+        // we can avoid this problem by keeping a reference to the visibleColumns before setOptions and then setColumns after 
+        var previousVisibleColumns = getVisibleColumns();
+        var isChecked = e.target.checked;
+        _grid.setOptions({ forceFitColumns: isChecked });
+        _grid.setColumns(previousVisibleColumns);
         return;
       }
 
