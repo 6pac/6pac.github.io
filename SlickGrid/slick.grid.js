@@ -2799,7 +2799,7 @@ if (typeof Slick === "undefined") {
       return options;
     }
 
-    function setOptions(args, suppressRender) {
+    function setOptions(args, suppressRender, suppressColumnSet) {
       if (!getEditorLock().commitCurrentEdit()) {
         return;
       }
@@ -2821,13 +2821,17 @@ if (typeof Slick === "undefined") {
       validateAndEnforceOptions();
 
       $viewport.css("overflow-y", options.autoHeight ? "hidden" : "auto");
-      if (!suppressRender) { render(); }
+      if (!suppressRender) {
+        render();
+      }
 
       setFrozenOptions();
       setScroller();
       zombieRowNodeFromLastMouseWheelEvent = null;
 
-      setColumns(treeColumns.extractColumns());
+      if (!suppressColumnSet) {
+        setColumns(treeColumns.extractColumns());
+      }
     }
 
     function validateAndEnforceOptions() {
@@ -5791,7 +5795,7 @@ if (typeof Slick === "undefined") {
     // Public API
 
     $.extend(this, {
-      "slickGridVersion": "2.4.28",
+      "slickGridVersion": "2.4.29",
 
       // Events
       "onScroll": new Slick.Event(),
