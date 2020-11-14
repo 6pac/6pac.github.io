@@ -49,6 +49,7 @@
     var compiledFilter;
     var compiledFilterWithCaching;
     var filterCache = [];
+    var _grid = null;
 
     // grouping
     var groupingInfoDefaults = {
@@ -72,6 +73,7 @@
     var groups = [];
     var toggledGroupsByLevel = [];
     var groupingDelimiter = ':|:';
+    var selectedRowIds = null;
 
     var pagesize = 0;
     var pagenum = 0;
@@ -97,6 +99,27 @@
     function endUpdate() {
       suspend = false;
       refresh();
+    }
+	
+    function destroy() {
+      items = [];
+      idxById = null;
+      rowsById = null;
+      filter = null;
+      updated = null;
+      sortComparer = null;
+      filterCache = [];
+      filteredItems = [];
+      compiledFilter = null;
+      compiledFilterWithCaching = null;
+
+      if (_grid && _grid.onSelectedRowsChanged && _grid.onCellCssStylesChanged) {
+        _grid.onSelectedRowsChanged.unsubscribe();
+        _grid.onCellCssStylesChanged.unsubscribe();
+      }
+      if (self.onRowsOrCountChanged) {
+        self.onRowsOrCountChanged.unsubscribe();
+      }
     }
 
     function setRefreshHints(hints) {
@@ -1052,7 +1075,6 @@
         }, null, self);
       }
     }
-
     /***
      * Wires the grid and the DataView together to keep row selection tied to item ids.
      * This is useful since, without it, the grid only knows about rows, so if the items
@@ -1074,8 +1096,9 @@
      */
     function syncGridSelection(grid, preserveHidden, preserveHiddenOnSelectionChange) {
       var self = this;
+      _grid = grid;
       var inHandler;
-      var selectedRowIds = self.mapRowsToIds(grid.getSelectedRows());
+      selectedRowIds = self.mapRowsToIds(grid.getSelectedRows());
       var onSelectedRowIdsChanged = new Slick.Event();
 
       function setSelectedRowIds(rowIds) {
@@ -1120,6 +1143,21 @@
       this.onRowsOrCountChanged.subscribe(update);
 
       return onSelectedRowIdsChanged;
+    }
+
+    /** Get all selected IDs */
+    function getAllSelectedIds(){
+      return selectedRowIds;
+    }
+
+    /** Get all selected dataContext items */
+    function getAllSelectedItems() {
+      var selectedData = [];
+      var selectedIds = getAllSelectedIds();
+      selectedIds.forEach(function (id) {
+          selectedData.push(self.getItemById(id));
+      });
+      return selectedData;
     }
 
     function syncGridCellCssStyles(grid, key) {
@@ -1172,6 +1210,7 @@
       // methods
       "beginUpdate": beginUpdate,
       "endUpdate": endUpdate,
+      "destroy": destroy,
       "setPagingOptions": setPagingOptions,
       "getPagingInfo": getPagingInfo,
       "getIdPropertyName": getIdPropertyName,
@@ -1192,6 +1231,8 @@
       "collapseGroup": collapseGroup,
       "expandGroup": expandGroup,
       "getGroups": getGroups,
+      "getAllSelectedIds": getAllSelectedIds,
+      "getAllSelectedItems": getAllSelectedItems,
       "getIdxById": getIdxById,
       "getRowByItem": getRowByItem,
       "getRowById": getRowById,
@@ -1225,7 +1266,7 @@
       "onBeforePagingInfoChanged": onBeforePagingInfoChanged,
       "onPagingInfoChanged": onPagingInfoChanged,
       "onGroupExpanded": onGroupExpanded,
-      "onGroupCollapsed": onGroupCollapsed
+      "onGroupCollapsed": onGroupCollapsed,
     });
   }
 
