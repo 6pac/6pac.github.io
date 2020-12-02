@@ -113,6 +113,7 @@ if (typeof Slick === "undefined") {
       minRowBuffer: 3,
       emulatePagingWhenScrolling: true, // when scrolling off bottom of viewport, place new row at top of viewport
       editorCellNavOnLRKeys: false,
+      enableMouseWheelScrollHandler: true,
       doPaging: true,
       autosizeColsMode: Slick.GridAutosizeColsMode.LegacyOff,
       autosizeColPaddingPx: 4,
@@ -567,7 +568,7 @@ if (typeof Slick === "undefined") {
         $viewport
             .on("scroll", handleScroll);
 
-        if (jQuery.fn.mousewheel) {
+        if (jQuery.fn.mousewheel && options.enableMouseWheelScrollHandler) {
           $viewport.on("mousewheel", handleMouseWheel);
         }
 
@@ -2090,7 +2091,22 @@ if (typeof Slick === "undefined") {
       $container.off(".slickgrid");
       removeCssRules();
 
-      $canvas.off("draginit dragstart dragend drag");
+      $canvas.off();
+      $viewport.off();
+      $headerScroller.off();
+      $headerRowScroller.off();
+      if ($footerRow) {
+        $footerRow.off();
+      }
+      if ($footerRowScroller) {
+        $footerRowScroller.off();
+      }
+      if ($preHeaderPanelScroller) {
+        $preHeaderPanelScroller.off();
+      }
+      $focusSink.off();
+      $(".slick-resizable-handle").off();
+      $(".slick-header-column").off();
       $container.empty().removeClass(uid);
       if (shouldDestroyAllElements) {
         destroyAllElements();
@@ -2496,10 +2512,10 @@ if (typeof Slick === "undefined") {
             val = (Array.isArray(row) ? row[columnDef.field] : row);
             if (columnDef.formatterOverride) {
               // use formatterOverride as first preference
-              formatterResult = columnDef.formatterOverride(index, colIndex, val, columnDef, row);
+              formatterResult = columnDef.formatterOverride(index, colIndex, val, columnDef, row, self);
             } else if (columnDef.formatter) {
               // otherwise, use formatter
-              formatterResult = columnDef.formatter(index, colIndex, val, columnDef, row);
+              formatterResult = columnDef.formatter(index, colIndex, val, columnDef, row, self);
             } else {
               // otherwise, use plain text
               formatterResult = '' + val;
@@ -2906,6 +2922,15 @@ if (typeof Slick === "undefined") {
       if (!suppressColumnSet) {
         setColumns(treeColumns.extractColumns());
       }
+
+      if (options.enableMouseWheelScrollHandler && $viewport && jQuery.fn.mousewheel) {
+        var viewportEvents = $._data($viewport[0], "events");
+        if (!viewportEvents || !viewportEvents.mousewheel) {
+          $viewport.on("mousewheel", handleMouseWheel);
+        }
+      } else if (options.enableMouseWheelScrollHandler === false) {
+        $viewport.off("mousewheel"); // remove scroll handler when option is disable
+      }
     }
 
     function validateAndEnforceOptions() {
@@ -3140,25 +3165,6 @@ if (typeof Slick === "undefined") {
           column.formatter ||
           (options.formatterFactory && options.formatterFactory.getFormatter(column)) ||
           options.defaultFormatter;
-    }
-
-    function callFormatter( row, cell, value, m, item, grid ) {
-
-    	var result;
-
-        // pass metadata to formatter
-        var metadata = data.getItemMetadata && data.getItemMetadata(row);
-        metadata = metadata && metadata.columns;
-
-        if( metadata ) {
-        	var columnData = metadata[m.id] || metadata[cell];
-        	result = getFormatter(row, m)(row, cell, value, m, item, columnData );
-        }
-        else {
-        	result = getFormatter(row, m)(row, cell, value, m, item);
-        }
-
-        return result;
     }
 
     function getEditor(row, cell) {
@@ -5871,7 +5877,7 @@ if (typeof Slick === "undefined") {
     // Public API
 
     $.extend(this, {
-      "slickGridVersion": "2.4.31",
+      "slickGridVersion": "2.4.32",
 
       // Events
       "onScroll": new Slick.Event(),
