@@ -30,14 +30,6 @@ if (typeof Slick === "undefined") {
 
 (function ($) {
   "use strict";
-
-  // Slick.Grid
-  $.extend(true, window, {
-    Slick: {
-      Grid: SlickGrid
-    }
-  });
-
   // shared across all grids on the page
   var scrollbarDimensions;
   var maxSupportedCssHeight;  // browser's breaking point
@@ -120,7 +112,8 @@ if (typeof Slick === "undefined") {
       autosizeTextAvgToMWidthRatio: 0.75,
       viewportSwitchToScrollModeWidthPercent: undefined,
       viewportMinWidthPx: undefined,
-      viewportMaxWidthPx: undefined
+      viewportMaxWidthPx: undefined,
+      suppressCssChangesOnHiddenInit: false
     };
 
     var columnDefaults = {
@@ -329,7 +322,7 @@ if (typeof Slick === "undefined") {
         throw new Error("SlickGrid requires a valid container, " + container + " does not exist in the DOM.");
       }
 
-      cacheCssForHiddenInit();
+      if (!options.suppressCssChangesOnHiddenInit) { cacheCssForHiddenInit(); }
 
       // calculate these only once and share between grid instances
       maxSupportedCssHeight = maxSupportedCssHeight || getMaxSupportedCssHeight();
@@ -609,7 +602,7 @@ if (typeof Slick === "undefined") {
             .on("mouseenter", ".slick-cell", handleMouseEnter)
             .on("mouseleave", ".slick-cell", handleMouseLeave);
 
-        restoreCssFromHiddenInit();
+        if (!options.suppressCssChangesOnHiddenInit) { restoreCssFromHiddenInit(); }
       }
     }
 
@@ -5877,7 +5870,7 @@ if (typeof Slick === "undefined") {
     // Public API
 
     $.extend(this, {
-      "slickGridVersion": "2.4.32",
+      "slickGridVersion": "2.4.33",
 
       // Events
       "onScroll": new Slick.Event(),
@@ -5981,6 +5974,8 @@ if (typeof Slick === "undefined") {
       "setActiveViewportNode": setActiveViewportNode,
       "focus": setFocus,
       "scrollTo": scrollTo,
+      "cacheCssForHiddenInit": cacheCssForHiddenInit,
+      "restoreCssFromHiddenInit": restoreCssFromHiddenInit,
 
       "getCellFromPoint": getCellFromPoint,
       "getCellFromEvent": getCellFromEvent,
@@ -6042,4 +6037,11 @@ if (typeof Slick === "undefined") {
 
     init();
   }
+
+  // exports
+  $.extend(true, window, {
+    Slick: {
+      Grid: SlickGrid
+    }
+  });
 }(jQuery));
