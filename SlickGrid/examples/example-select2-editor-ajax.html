@@ -1,0 +1,265 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <link rel="shortcut icon" type="image/ico" href="favicon.ico" />
+  <title>SlickGrid example: 'Select2' javascript dropdown editor</title>
+  <link rel="stylesheet" href="../slick.grid.css" type="text/css"/>
+  <link rel="stylesheet" href="../css/smoothness/jquery-ui.css" type="text/css"/>
+  <link rel="stylesheet" href="examples.css" type="text/css"/>
+  <link rel="stylesheet" href="../css/select2.css" type="text/css"/>
+   <style>
+	.select2-container {
+		top: -3px;
+		left: -6px;
+	}
+    .select2-container .select2-selection--single {
+		height: 26px;
+	}  
+</style>
+</head>
+<body>
+<div style="position:relative">
+  <div style="width:600px;">
+    <div id="myGrid" style="width:100%;height:500px;"></div>
+  </div>
+
+  <div class="options-panel">
+    <h2>Demonstrates:</h2>
+    <ul>
+      <li>'Select2' javascript dropdown editor</li>
+      <li>auto-edit settings</li>
+    </ul>
+
+    <h2>Options:</h2>
+    <button onclick="grid.setOptions({autoEdit:true})">Auto-edit ON</button>
+    &nbsp;
+    <button onclick="grid.setOptions({autoEdit:false})">Auto-edit OFF</button>
+      <h2>View Source:</h2>
+      <ul>
+          <li><A href="https://github.com/6pac/SlickGrid/blob/master/examples/example-select2-editor.html" target="_sourcewindow"> View the source for this example on Github</a></li>
+      </ul>
+  </div>
+</div>
+
+<script src="../lib/firebugx.js"></script>
+
+<script src="../lib/jquery-1.12.4.min.js"></script>
+<script src="../lib/jquery-ui.min.js"></script>
+<script src="../lib/jquery.event.drag-2.3.0.js"></script>
+
+<script src="../slick.core.js"></script>
+<script src="../plugins/slick.cellrangedecorator.js"></script>
+<script src="../plugins/slick.cellrangeselector.js"></script>
+<script src="../plugins/slick.cellselectionmodel.js"></script>
+<script src="../slick.formatters.js"></script>
+<script src="../slick.editors.js"></script>
+<script src="../slick.grid.js"></script>
+<script src="../lib/select2.js"></script>
+<script>
+
+    function formatRepo(repo) {
+        if (repo.loading) {
+            return repo.text;
+        }
+
+        var $container = $(
+            "<div class='select2-result-repository clearfix'>" +
+            "<div class='select2-result-repository__avatar'><img style='width:60px' src='" + repo.owner.avatar_url + "' /></div>" +
+            "<div class='select2-result-repository__meta'>" +
+            "<div class='select2-result-repository__title'></div>" +
+            "<div class='select2-result-repository__description'></div>" +
+            "<div class='select2-result-repository__statistics'>" +
+            "<div class='select2-result-repository__forks'><i class='fa fa-flash'></i> </div>" +
+            "<div class='select2-result-repository__stargazers'><i class='fa fa-star'></i> </div>" +
+            "<div class='select2-result-repository__watchers'><i class='fa fa-eye'></i> </div>" +
+            "</div>" +
+            "</div>" +
+            "</div>"
+        );
+
+        $container.find(".select2-result-repository__title").text(repo.full_name);
+        $container.find(".select2-result-repository__description").text(repo.description);
+        $container.find(".select2-result-repository__forks").append(repo.forks_count + " Forks");
+        $container.find(".select2-result-repository__stargazers").append(repo.stargazers_count + " Stars");
+        $container.find(".select2-result-repository__watchers").append(repo.watchers_count + " Watchers");
+
+        return $container;
+    }
+
+    function formatRepoSelection(repo) {
+        return repo.full_name || repo.text;
+    }
+
+    function Select2Editor(args) {
+        var $input;
+        var defaultValue;
+        var scope = this;
+        var calendarOpen = false;
+        this.keyCaptureList = [Slick.keyCode.UP, Slick.keyCode.DOWN, Slick.keyCode.ENTER];
+        this.init = function () {
+            $input = $('<select></select>');
+            $input.width(args.container.clientWidth + 3);
+            $input.appendTo(args.container);
+            $input.focus().select();
+
+            $input.select2({
+                // placeholder: '-',
+                allowClear: true,
+                ajax: {
+                    url: args.column.jsonEndpoint,
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            q: params.term, // search term
+                            page: params.page
+                        };
+                    },
+                    processResults: function (data, params) {
+                        // parse the results into the format expected by Select2
+                        // since we are using custom formatting functions we do not need to
+                        // alter the remote JSON data, except to indicate that infinite
+                        // scrolling can be used
+                        params.page = params.page || 1;
+
+                        return {
+                            results: data.items,
+                            pagination: {
+                                more: (params.page * 30) < data.total_count
+                            }
+                        };
+                    },
+                    cache: true
+                },
+                placeholder: 'Search...',
+                minimumInputLength: 1,
+                templateResult: formatRepo,
+                templateSelection: formatRepoSelection
+            });
+        };
+        this.destroy = function () {
+            $input.select2('close');
+            $input.select2('destroy');
+            $input.remove();
+        };
+        this.show = function () {
+        };
+        this.hide = function () {
+        };
+        this.position = function (position) {
+        };
+        this.focus = function () {
+            $input.select2('input_focus');
+        };
+        this.loadValue = function (item) {
+            // called when entering and leaving the editor
+            arr = JSON.parse(item[args.column.field]);
+            $input.val(arr.id);
+            $input[0].defaultValue = arr.id;
+            $input.trigger("change.select2");
+        };
+        this.serializeValue = function () {
+            arr = $input.select2('data')
+            if (arr.length > 0) {
+                return JSON.stringify({
+                    'id': $input.val(),
+                    'imgsrc': arr[0].owner.avatar_url,
+                    'href': arr[0].html_url,
+                    'text': arr[0].full_name
+                });
+            }
+            return $input.val();
+        };
+        this.applyValue = function (item, state) {
+            // called when leaving the editor
+            item[args.column.field] = state;
+        };
+        this.isValueChanged = function () {
+            return (!($input.val() == "" && defaultValue == null)) && ($input.val() != defaultValue);
+        };
+        this.validate = function () {
+            return {
+                valid: true,
+                msg: null
+            };
+        };
+        this.init();
+    }
+
+    function Select2Formatter(row, cell, value, columnDef, dataContext) {
+        // called for every row
+        if (value) {
+            obj = JSON.parse(value);
+            res = '<img style="height:100%" src="' + obj.imgsrc + '"/>';
+            res += '<span style="vertical-align:top"> ';
+            res += obj.text + ' <a href="' + obj.href + '">Link</a>';
+            res += '</span>';
+            return res;
+        }
+        return '-';
+    }
+</script>
+<script>
+  // stackoverflow.com/questions/2532218
+  function pickRandomProperty(obj) {
+	var result;
+	var count = 0;
+	for (var prop in obj)
+		if (Math.random() < 1/++count)
+		   result = prop;
+	return result;
+  }
+	
+  function requiredFieldValidator(value) {
+    if (value == null || value == undefined || !value.length) {
+      return {valid: false, msg: "This is a required field"};
+    } else {
+      return {valid: true, msg: null};
+    }
+  }
+  var grid;
+  var data = [];
+  var columns = [
+    {id: "title", name: "Title", field: "title", width: 80, cssClass: "cell-title", editor: Slick.Editors.Text},
+    {id: "duration", name: "Duration", field: "duration", editor: Slick.Editors.Text},
+    {id: "start", name: "Start", field: "start", minWidth: 60, editor: Slick.Editors.Date},
+    {id: "finish", name: "Finish", field: "finish", minWidth: 60, editor: Slick.Editors.Date},
+    {
+        id: "repository", name: "Repository", field: "repository", minWidth: 200,
+        formatter: Select2Formatter, editor: Select2Editor,
+        jsonEndpoint: "https://api.github.com/search/repositories"
+    }
+  ];
+  var options = {
+    editable: true,
+    enableAddRow: true,
+    enableCellNavigation: true,
+    asyncEditorLoading: false,
+    autoEdit: false
+  };
+  $(function () {
+    for (var i = 0; i < 500; i++) {
+      var d = (data[i] = {});
+      d["title"] = "Task " + i;
+      d["duration"] = "5 days";
+      d["start"] = "01/01/2009";
+      d["finish"] = "01/05/2009";
+      
+     // for sort abilities, place the pair at the front of the JSON
+      d["repository"] =
+          '{"text": "bilogic/logitech-unifying-device", "id": "263104547", "imgsrc":"https://avatars.githubusercontent.com/u/946010?v=4","href": "https://github.com/bilogic/logitech-unifying-device"}';
+    }
+    grid = new Slick.Grid("#myGrid", data, columns, options);
+    grid.setSelectionModel(new Slick.CellSelectionModel());
+    grid.onAddNewRow.subscribe(function (e, args) {
+      var item = args.item;
+      grid.invalidateRow(data.length);
+      data.push(item);
+      grid.updateRowCount();
+      grid.render();
+    });
+  })
+</script>
+</body>
+</html>
