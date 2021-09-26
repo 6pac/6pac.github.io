@@ -247,13 +247,6 @@ if (typeof Slick === "undefined") {
     var counter_rows_rendered = 0;
     var counter_rows_removed = 0;
 
-    // These two variables work around a bug with inertial scrolling in Webkit/Blink on Mac.
-    // See http://crbug.com/312427.
-    var rowNodeFromLastMouseWheelEvent;  // this node must not be deleted while inertial scrolling
-    var zombieRowNodeFromLastMouseWheelEvent;  // node that was hidden instead of getting deleted
-    var zombieRowCacheFromLastMouseWheelEvent;  // row cache for above node
-    var zombieRowPostProcessedFromLastMouseWheelEvent;  // post processing references for above node
-
     var $paneHeaderL;
     var $paneHeaderR;
     var $paneTopL;
@@ -323,14 +316,14 @@ if (typeof Slick === "undefined") {
         throw new Error("SlickGrid requires a valid container, " + container + " does not exist in the DOM.");
       }
 
-      if (!options.suppressCssChangesOnHiddenInit) { cacheCssForHiddenInit(); }
-
       // calculate these only once and share between grid instances
       maxSupportedCssHeight = maxSupportedCssHeight || getMaxSupportedCssHeight();
 
       options = $.extend({}, defaults, options);
       validateAndEnforceOptions();
       columnDefaults.width = options.defaultColumnWidth;
+
+      if (!options.suppressCssChangesOnHiddenInit) { cacheCssForHiddenInit(); }
 
       treeColumns = new Slick.TreeColumns(columns);
       columns = treeColumns.extractColumns();
@@ -2487,12 +2480,15 @@ if (typeof Slick === "undefined") {
       if (autoSize.valueFilterMode === Slick.ValueFilterMode.GetLongestText) {
         // get greatest abs value in data
         var tempVal, maxLen = 0, maxIndex = 0;
-        for (i = 0, ii = rows.length; i < ii; i++) {
-          tempVal = rows[i][columnDef.field];
-          if ((tempVal || '').length > maxLen) { maxLen = tempVal.length; maxIndex = i; }
+        if (row.length) {
+          for (i = 0, ii = rows.length; i < ii; i++) {
+            tempVal = rows[i][columnDef.field];
+            if ((tempVal || '').length > maxLen) { maxLen = tempVal.length; maxIndex = i; }
+          }
+          // now substitute a 'c' for all characters
+          tempVal = rows[maxIndex][columnDef.field];
         }
-        // now substitute a 'c' for all characters
-        tempVal = rows[maxIndex][columnDef.field];
+
         rows = [ tempVal ];
       }
 
@@ -2950,7 +2946,6 @@ if (typeof Slick === "undefined") {
       if (!suppressSetOverflow) {
         setOverflow();
       }
-      zombieRowNodeFromLastMouseWheelEvent = null;
 
       if (!suppressColumnSet) {
         setColumns(treeColumns.extractColumns());
@@ -3415,7 +3410,7 @@ if (typeof Slick === "undefined") {
         groupId: postProcessgroupId,
         node: cacheEntry.rowNode
       });
-      $(cacheEntry.rowNode).detach();
+      cacheEntry.rowNode.detach();
     }
 
     function queuePostProcessedCellForCleanup(cellnode, columnIdx, rowIdx) {
@@ -3435,18 +3430,12 @@ if (typeof Slick === "undefined") {
         return;
       }
 
-      if (rowNodeFromLastMouseWheelEvent == cacheEntry.rowNode[0]
-        || (hasFrozenColumns() && rowNodeFromLastMouseWheelEvent == cacheEntry.rowNode[1])) {
-
-        cacheEntry.rowNode.hide();
-
-        zombieRowNodeFromLastMouseWheelEvent = cacheEntry.rowNode;
+      if (options.enableAsyncPostRenderCleanup && postProcessedRows[row]) {
+        queuePostProcessedRowForCleanup(cacheEntry, postProcessedRows[row], row);
       } else {
-
         cacheEntry.rowNode.each(function() {
           this.parentElement.removeChild(this);
         });
-
       }
 
       delete rowsCache[row];
@@ -3904,9 +3893,15 @@ if (typeof Slick === "undefined") {
         }
       }
 
-      var cellToRemove;
+      var cellToRemove, cellNode;
       while ((cellToRemove = cellsToRemove.pop()) != null) {
-        cacheEntry.cellNodesByColumnIdx[cellToRemove][0].parentElement.removeChild(cacheEntry.cellNodesByColumnIdx[cellToRemove][0]);
+        cellNode = cacheEntry.cellNodesByColumnIdx[cellToRemove][0];
+
+        if (options.enableAsyncPostRenderCleanup && postProcessedRows[row] && postProcessedRows[row][cellToRemove]) {
+          queuePostProcessedCellForCleanup(cellNode, cellToRemove, row);
+        } else {
+          cellNode.parentElement.removeChild(cellNode);
+        }       
 
         delete cacheEntry.cellColSpans[cellToRemove];
         delete cacheEntry.cellNodesByColumnIdx[cellToRemove];
@@ -4058,23 +4053,23 @@ if (typeof Slick === "undefined") {
                 rowsCache[rows[i]].rowNode = $()
                     .add($(x.firstChild))
                     .add($(xRight.firstChild));
-                $canvasBottomL.append(x.firstChild);
-                $canvasBottomR.append(xRight.firstChild);
+                $canvasBottomL[0].append(x.firstChild);
+                $canvasBottomR[0].append(xRight.firstChild);
             } else {
                 rowsCache[rows[i]].rowNode = $()
                     .add($(x.firstChild));
-                $canvasBottomL.append($(x.firstChild));
+                $canvasBottomL[0].append($(x.firstChild));
             }
         } else if (hasFrozenColumns()) {
             rowsCache[rows[i]].rowNode = $()
                 .add($(x.firstChild))
                 .add($(xRight.firstChild));
-            $canvasTopL.append(x.firstChild);
-            $canvasTopR.append(xRight.firstChild);
+            $canvasTopL[0].append(x.firstChild);
+            $canvasTopR[0].append(xRight.firstChild);
         } else {
             rowsCache[rows[i]].rowNode = $()
                 .add($(x.firstChild));
-            $canvasTopL.append(x.firstChild);
+            $canvasTopL[0].append(x.firstChild);
         }
       }
 
@@ -4515,23 +4510,6 @@ if (typeof Slick === "undefined") {
     // Interactivity
 
     function handleMouseWheel(e, delta, deltaX, deltaY) {
-      var $rowNode = $(e.target).closest(".slick-row");
-      var rowNode = $rowNode[0];
-      if (rowNode != rowNodeFromLastMouseWheelEvent) {
-
-        var $gridCanvas = $rowNode.parents('.grid-canvas');
-        var left = $gridCanvas.hasClass('grid-canvas-left');
-
-        if (zombieRowNodeFromLastMouseWheelEvent && zombieRowNodeFromLastMouseWheelEvent[left? 0:1] != rowNode) {
-          var zombieRow = zombieRowNodeFromLastMouseWheelEvent[left || zombieRowNodeFromLastMouseWheelEvent.length == 1? 0:1];
-          zombieRow.parentElement.removeChild(zombieRow);
-
-          zombieRowNodeFromLastMouseWheelEvent = null;
-        }
-
-        rowNodeFromLastMouseWheelEvent = rowNode;
-      }
-
       scrollTop = Math.max(0, $viewportScrollContainerY[0].scrollTop - (deltaY * options.rowHeight));
       scrollLeft = $viewportScrollContainerX[0].scrollLeft + (deltaX * 10);
       var handled = _handleScroll(true);
@@ -4943,7 +4921,7 @@ if (typeof Slick === "undefined") {
         makeActiveCellNormal();
         $(activeCellNode).removeClass("active");
         if (rowsCache[activeRow]) {
-          $(rowsCache[activeRow].rowNode).removeClass("active");
+          rowsCache[activeRow].rowNode.removeClass("active");
         }
       }
 
@@ -4975,7 +4953,7 @@ if (typeof Slick === "undefined") {
         if (options.showCellSelection) {
           $activeCellNode.addClass("active");
           if (rowsCache[activeRow]) {
-            $(rowsCache[activeRow].rowNode).addClass("active");
+            rowsCache[activeRow].rowNode.addClass("active");
           }
         }
 
@@ -5946,7 +5924,7 @@ if (typeof Slick === "undefined") {
     // Public API
 
     $.extend(this, {
-      "slickGridVersion": "2.4.40",
+      "slickGridVersion": "2.4.41",
 
       // Events
       "onScroll": new Slick.Event(),
