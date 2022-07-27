@@ -116,9 +116,7 @@ if (typeof Slick === "undefined") {
       viewportMaxWidthPx: undefined,
       suppressCssChangesOnHiddenInit: false,
       ffMaxSupportedCssHeight: 6000000,
-      maxSupportedCssHeight: 1000000000,
-      sanitizer: undefined,  // sanitize function, built in basic sanitizer is: Slick.RegexSanitizer(dirtyHtml)
-      logSanitizedHtml: false // log to console when sanitised - recommend true for testing of dev and production
+      maxSupportedCssHeight: 1000000000
     }; 
 
     var columnDefaults = {
@@ -3192,6 +3190,8 @@ if (typeof Slick === "undefined") {
       offset = Math.round(page * cj);
       var newScrollTop = y - offset;
 
+     console.log('scrollTo - offset ' + offset + ', diff: ' + (offset - oldOffset));
+ 
       if (offset != oldOffset) {
         var range = getVisibleRange(newScrollTop);
         cleanupRows(range);
@@ -3807,7 +3807,7 @@ if (typeof Slick === "undefined") {
       }
 
       var oldScrollTopInRange = (scrollTop + offset <= th - tempViewportH);
-
+      console.log('updateRowCount - diff: ' + ((th - tempViewportH) - (scrollTop + offset)));
       if (th == 0 || scrollTop == 0) {
         page = offset = 0;
       } else if (oldScrollTopInRange) {
@@ -4149,9 +4149,12 @@ if (typeof Slick === "undefined") {
     }
 
     function updateRowPositions() {
+      var isFirst = true;
       for (var row in rowsCache) {
         var rowNumber = row ? parseInt(row) : 0;
+        if (isFirst) { console.log('updateRowPositions - old: ' + rowsCache[rowNumber].rowNode[0].style.top + ', new: ' + getRowTop(rowNumber)); }
         rowsCache[rowNumber].rowNode[0].style.top = getRowTop(rowNumber) + "px";
+        isFirst = false;
       }
     }
 
@@ -5951,21 +5954,12 @@ if (typeof Slick === "undefined") {
       }
     }
 
-    /** html sanitizer to avoid scripting attack */
-    var logMessageCount = 0;
-    var logMessageMaxCount = 30;
-
-    function sanitizeHtmlString(dirtyHtml, suppressLogging) {
-      if (!options.sanitizer || typeof dirtyHtml !== 'string') return dirtyHtml;
-      
-      var cleanHtml = options.sanitizer(dirtyHtml);
-      
-      if (!suppressLogging && options.logSanitizedHtml && logMessageCount <= logMessageMaxCount && cleanHtml !== dirtyHtml) {
-        console.log("sanitizer altered html: " + dirtyHtml + " --> " + cleanHtml);    
-        if (logMessageCount === logMessageMaxCount) { console.log("sanitizer: silencing messages after first " + logMessageMaxCount); }
-        logMessageCount++;
+    /** basic html sanitizer to avoid scripting attack */
+    function sanitizeHtmlString(dirtyHtml) {
+      var sanitizer = options.sanitizer || function (dirtyHtmlStr) {
+        return dirtyHtmlStr.replace(/(\b)(on\S+)(\s*)=|javascript:([^>]*)[^>]*|(<\s*)(\/*)script([<>]*).*(<\s*)(\/*)script(>*)|(&lt;)(\/*)(script|script defer)(.*)(&gt;|&gt;">)/gi, '');
       }
-      return cleanHtml;
+      return typeof dirtyHtml === 'string' ? sanitizer(dirtyHtml) : dirtyHtml;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////
@@ -5996,7 +5990,7 @@ if (typeof Slick === "undefined") {
     // Public API
 
     $.extend(this, {
-      "slickGridVersion": "2.4.45",
+      "slickGridVersion": "2.4.44",
 
       // Events
       "onScroll": new Slick.Event(),

@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <link rel="stylesheet" href="../slick.grid.css" type="text/css"/>
+  <link rel="stylesheet" href="../css/smoothness/jquery-ui.css" type="text/css"/>
+  <link rel="stylesheet" href="examples.css" type="text/css"/>
+</head>
+<body>
+<div id="myGrid" style="width:300px;height:500px;"></div>
+
+<script src="../lib/jquery-1.12.4.min.js"></script>
+<script src="../lib/jquery.event.drag-2.3.0.js"></script>
+
+<script src="../slick.core.js"></script>
+<script src="../slick.grid.js"></script>
+
+<script>
+  var grid;
+  var columns = [
+    {id: "col1", name: "A", field: "col1", width: 200}
+  ];
+
+  var options = {
+    enableCellNavigation: true,
+    enableColumnReorder: false,
+    maxSupportedCssHeight: 10000000
+  };
+
+let currentDataLength = 3200000;
+
+var dataProvider = {
+	getItem: function (row) {
+  	return {
+    	'col1': row + 'col1'
+    }
+  },
+  getLength: function() {
+  	return currentDataLength;
+  }
+};
+
+  $(function () {
+    grid = new Slick.Grid("#myGrid", dataProvider, columns, options);
+
+    setInterval(() => {
+      currentDataLength += 5000
+      grid.updateRowCount();
+      //grid.render();
+    }, 1000);
+  })
+</script>
+</body>
+</html> 
